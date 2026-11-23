@@ -1043,11 +1043,26 @@ function takeSnapshot(){
 
 function saveFormSnapshot(){
   var snap = takeSnapshot();
+  var title = snapTitle(snap);
+  /* 같은 날짜·이름({날짜} {이름})이 이미 저장돼 있으면 새 칩을 만들지 않고
+     그 항목을 지금 입력 내용으로 덮어쓴다. */
+  var same = -1;
+  for(var i = 0; i < savedList.length; i++){
+    if(snapTitle(savedList[i]) === title){ same = i; break; }
+  }
+  if(same > -1){
+    snap.id = savedList[same].id;
+    savedList[same] = snap;
+    persistSaved();
+    renderSaved();
+    toast('💾 덮어저장 완료: ' + title);
+    return;
+  }
   savedList.unshift(snap);
   if(savedList.length > SAVED_MAX) savedList = savedList.slice(0, SAVED_MAX);
   persistSaved();
   renderSaved();
-  toast('💾 저장했습니다 · ' + snapTitle(snap));
+  toast('💾 저장했습니다 · ' + title);
 }
 
 function loadSnapshot(id){
