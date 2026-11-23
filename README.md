@@ -3,7 +3,7 @@
 만천초등학교 **여비 정산 신청서(동승자 포함 서식)** 를 휴대폰·PC에서 바로 채우고, 인쇄·PDF로 뽑고, 구글 시트와 실시간으로 맞춰 두는 웹앱(PWA)입니다. 원본은 학교에서 쓰던 한글 서식 `여비정산신청서(동승자포함서식).hwp`입니다.
 
 - 주소(공개 후): `https://hong3256.github.io/travel-settlement/`
-- 구글 시트: [만천초 여비 정산 신청서](https://docs.google.com/spreadsheets/d/1MopKOI1ZnKJqORRTxNCiBot_5_nbC_GGAirCLQ1Yt5w/edit)
+- 구글 시트: 「만천초 여비 정산 신청서」(계정 소유, 링크는 대화로 전달)
 
 ## 들어 있는 것
 
