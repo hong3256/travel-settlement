@@ -122,6 +122,24 @@ table.form tr.r-fare input[type="date"].inp{font-size:8pt}
 .tilde{padding:0 2mm; color:#000}
 .trip-cell{display:flex; align-items:center; flex-wrap:wrap; gap:1mm 2mm}
 .mob-lbl{display:none}
+/* 운임 행 중간 삽입(＋)·삭제(－) — 화면에서만 보이고 인쇄·PDF(pdf-mode)에는 나오지 않는다 */
+.fare-tools{
+  display:none; position:absolute; right:3px; top:50%; transform:translateY(-50%);
+  z-index:6; flex-direction:column; gap:1px;
+}
+tr.r-fare td.c-amt{position:relative}
+@media screen{
+  body:not(.pdf-mode) .fare-tools{display:flex}
+  body:not(.pdf-mode) tr.r-fare td.c-amt{padding-right:29px}
+}
+.fbtn{
+  width:22px; height:17px; padding:0; border:1px solid #cfd9e5; border-radius:4px;
+  background:#f7f9fc; color:#1f4e79; font-size:14px; font-weight:900; line-height:15px;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.fbtn.add{color:#1b5e20; border-color:#a5d6a7; background:#eef8ef}
+.fbtn.del{color:#b3261e; border-color:#ecc4c0; background:#fdf1f0}
+.fbtn:active{transform:translateY(1px)}
 /* 동승자 */
 .pax-count{display:flex; align-items:center; justify-content:center; gap:1.5mm; width:100%; flex-wrap:wrap}
 .pax-count .inp{width:2.2em; flex:0 0 auto; text-align:center; padding:0}
@@ -205,6 +223,8 @@ table.form tr.r-fare input[type="date"].inp{font-size:8pt}
   .pax-count .inp{display:none}
   .pax-count .unit{display:none}
   .pax-cnt-print{display:inline !important}
+  .fare-tools{display:none !important}
+  table.form.fares-more tr.r-fare td{height:6.4mm}
 }
 .pax-cnt-print{display:none}
 /* ---------- PDF 캡처 모드 ---------- */
@@ -221,6 +241,9 @@ body.pdf-mode .pax-auto{display:none}
 body.pdf-mode .pax-count .inp{display:none}
 body.pdf-mode .pax-count .unit{display:none}
 body.pdf-mode .pax-cnt-print{display:inline !important}
+body.pdf-mode .no-print,body.pdf-mode .fare-tools{display:none !important}
+body.pdf-mode tr.r-fare td.c-amt{padding-right:1mm}
+body.pdf-mode table.form.fares-more tr.r-fare td{height:6.4mm}
 /* ---------- 좁은 화면 ---------- */
 @media (max-width:820px){
   .doc-mark{white-space:normal}
@@ -283,6 +306,11 @@ body:not(.pdf-mode) .sign-date{text-align:left}
 body:not(.pdf-mode) .sign-people{justify-content:flex-start; flex-wrap:wrap}
 body:not(.pdf-mode) .sign-name{width:auto; flex:1 1 120px}
 body:not(.pdf-mode) .notes ol{padding-left:5mm}
+/* 운임 행 ＋/－ — 휴대폰에서는 누르기 좋게 크게, 금액 칸 옆에 나란히 */
+body:not(.pdf-mode) tr.r-fare td.c-amt{display:flex; align-items:center; gap:5px; padding-right:0}
+body:not(.pdf-mode) tr.r-fare td.c-amt > .fc{flex:1 1 auto; min-width:0}
+body:not(.pdf-mode) tr.r-fare td.c-amt .fare-tools{position:static; transform:none; flex-direction:row; gap:5px; flex:0 0 auto; z-index:auto}
+body:not(.pdf-mode) tr.r-fare td.c-amt .fbtn{width:36px; height:36px; font-size:17px; border-radius:9px}
 }
 </style>
 </head>
@@ -378,38 +406,7 @@ body:not(.pdf-mode) .notes ol{padding-left:5mm}
           <td class="lbl" colspan="2">등  급</td>
           <td class="lbl" colspan="2">금  액</td>
         </tr>
-        <tr class="r-fare">
-          <td class="val"><span class="fc"><span class="fl">일자</span><span class="dwrap"><input class="inp center" type="date" data-k="fare1Date" aria-label="운임 1 일자"><span class="dfmt" data-f="fd1"></span></span></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">교통편</span><input class="inp center" data-k="fare1Mode" aria-label="운임 1 교통편" placeholder="교통편" autocomplete="off"></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">출발지</span><input class="inp center" data-k="fare1From" aria-label="운임 1 출발지" placeholder="출발지" autocomplete="off"></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">도착지</span><input class="inp center" data-k="fare1To" aria-label="운임 1 도착지" placeholder="도착지" autocomplete="off"></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">등급</span><input class="inp center" data-k="fare1Class" aria-label="운임 1 등급" placeholder="등급" autocomplete="off"></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">금액</span><input class="inp right" data-k="fare1Amount" data-type="money" aria-label="운임 1 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></span></td>
-        </tr>
-        <tr class="r-fare">
-          <td class="val"><span class="fc"><span class="fl">일자</span><span class="dwrap"><input class="inp center" type="date" data-k="fare2Date" aria-label="운임 2 일자"><span class="dfmt" data-f="fd2"></span></span></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">교통편</span><input class="inp center" data-k="fare2Mode" aria-label="운임 2 교통편" placeholder="교통편" autocomplete="off"></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">출발지</span><input class="inp center" data-k="fare2From" aria-label="운임 2 출발지" placeholder="출발지" autocomplete="off"></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">도착지</span><input class="inp center" data-k="fare2To" aria-label="운임 2 도착지" placeholder="도착지" autocomplete="off"></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">등급</span><input class="inp center" data-k="fare2Class" aria-label="운임 2 등급" placeholder="등급" autocomplete="off"></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">금액</span><input class="inp right" data-k="fare2Amount" data-type="money" aria-label="운임 2 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></span></td>
-        </tr>
-        <tr class="r-fare">
-          <td class="val"><span class="fc"><span class="fl">일자</span><span class="dwrap"><input class="inp center" type="date" data-k="fare3Date" aria-label="운임 3 일자"><span class="dfmt" data-f="fd3"></span></span></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">교통편</span><input class="inp center" data-k="fare3Mode" aria-label="운임 3 교통편" placeholder="교통편" autocomplete="off"></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">출발지</span><input class="inp center" data-k="fare3From" aria-label="운임 3 출발지" placeholder="출발지" autocomplete="off"></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">도착지</span><input class="inp center" data-k="fare3To" aria-label="운임 3 도착지" placeholder="도착지" autocomplete="off"></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">등급</span><input class="inp center" data-k="fare3Class" aria-label="운임 3 등급" placeholder="등급" autocomplete="off"></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">금액</span><input class="inp right" data-k="fare3Amount" data-type="money" aria-label="운임 3 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></span></td>
-        </tr>
-        <tr class="r-fare">
-          <td class="val"><span class="fc"><span class="fl">일자</span><span class="dwrap"><input class="inp center" type="date" data-k="fare4Date" aria-label="운임 4 일자"><span class="dfmt" data-f="fd4"></span></span></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">교통편</span><input class="inp center" data-k="fare4Mode" aria-label="운임 4 교통편" placeholder="교통편" autocomplete="off"></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">출발지</span><input class="inp center" data-k="fare4From" aria-label="운임 4 출발지" placeholder="출발지" autocomplete="off"></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">도착지</span><input class="inp center" data-k="fare4To" aria-label="운임 4 도착지" placeholder="도착지" autocomplete="off"></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">등급</span><input class="inp center" data-k="fare4Class" aria-label="운임 4 등급" placeholder="등급" autocomplete="off"></span></td>
-          <td class="val" colspan="2"><span class="fc"><span class="fl">금액</span><input class="inp right" data-k="fare4Amount" data-type="money" aria-label="운임 4 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></span></td>
-        </tr>
+        <!-- 운임 행: 기본 4행, 화면의 ＋/－ 버튼으로 중간 삽입·삭제(스크립트가 그린다) -->
         <tr class="gap"><td colspan="12"></td></tr>
 
         <!-- 동승자 -->
@@ -499,6 +496,37 @@ var DATES = ['tripStartDate','tripEndDate','fare1Date','fare2Date','fare3Date','
 var TRIP  = ['tripStartDate','tripEndDate','tripStartTime','tripEndTime'];
 var PAX   = ['pax1Name','pax2Name','pax3Name','pax4Name'];
 
+/* ================= 운임 행(기본 4행 · 최대 8행) =================
+   화면의 ＋ 버튼은 그 행 바로 아래에 새 행을 끼워 넣고, － 버튼은 그 행을 지워 아래 행을 위로 당긴다.
+   행 번호는 곧 칸 이름(fare1…fare8)이므로, 행을 옮길 때 값도 같이 옮겨 적는다.
+   구글 시트에는 1~4행만 자리가 있어서 1~4행만 S.pending 으로 시트와 맞춘다(5행부터는 이 기기·저장 양식에만). */
+var FARE_MIN = 4, FARE_MAX = 8;
+var FARE_SUF = ['Date','Mode','From','To','Class','Amount'];
+var FARE_FL  = { Date:'일자', Mode:'교통편', From:'출발지', To:'도착지', Class:'등급', Amount:'금액' };
+var FARE_SHEET_ROWS = 4;      /* 시트가 받는 운임 행 수(fare1*~fare4*) */
+
+function fareRowNo(k){        /* 'fare3Amount' → 3, 아니면 0 */
+  var m = /^fare(\d+)(Date|Mode|From|To|Class|Amount)$/.exec(k || '');
+  return m ? +m[1] : 0;
+}
+function isSheetFare(k){ var n = fareRowNo(k); return n > 0 && n <= FARE_SHEET_ROWS; }
+function fareMaxFromValues(){
+  var n = 0;
+  Object.keys(S.values || {}).forEach(function(k){
+    var r = fareRowNo(k);
+    if(r && String(S.values[k] == null ? '' : S.values[k]).trim()) n = Math.max(n, r);
+  });
+  return n;
+}
+function fareRowsFromState(v){
+  var n = Math.max(parseInt(v, 10) || 0, FARE_MIN, fareMaxFromValues());
+  return Math.min(FARE_MAX, n);
+}
+function fareCount(){
+  var n = parseInt(S.fareRows, 10) || FARE_MIN;
+  return Math.max(FARE_MIN, Math.min(FARE_MAX, n));
+}
+
 function $(s, r){ return (r||document).querySelector(s); }
 function $$(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
 function sleep(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
@@ -516,7 +544,7 @@ function timeStr(ts){
    sent      : 이 기기가 마지막으로 시트에 보낸 값
    localTs   : 칸마다 마지막으로 직접 입력한 시각
 */
-var S = { v:2, values:{}, manualTotal:false, manualApplicant:false, pending:{}, sent:{}, localTs:{} };
+var S = { v:2, values:{}, manualTotal:false, manualApplicant:false, pending:{}, sent:{}, localTs:{}, manualFareDate:{}, fareRows:4 };
 
 (function load(){
   try{
@@ -527,6 +555,12 @@ var S = { v:2, values:{}, manualTotal:false, manualApplicant:false, pending:{}, 
     if(o.values && typeof o.values === 'object') S.values = o.values;
     S.manualTotal = !!o.manualTotal;
     S.manualApplicant = !!o.manualApplicant;
+    if(o.manualFareDate && typeof o.manualFareDate === 'object'){
+      Object.keys(o.manualFareDate).forEach(function(k){ if(o.manualFareDate[k]) S.manualFareDate[k] = true; });
+    }
+    if(o.manualFare1Date) S.manualFareDate[1] = true;     /* 예전 저장값 호환 */
+    if(o.manualFare2Date) S.manualFareDate[2] = true;
+    S.fareRows = fareRowsFromState(o.fareRows);
     if(o.pending && typeof o.pending === 'object'){
       Object.keys(o.pending).forEach(function(k){
         var p = o.pending[k];
@@ -578,7 +612,8 @@ function setVal(k, v, opts){
   S.values[k] = v;
   if(!opts.local) S.localTs[k] = Date.now();   // 직접 입력한 시각(서버 값보다 우선)
   if(!opts.silent) setInput(k, v);
-  if(!opts.local){
+  /* 운임 5행부터는 시트에 자리가 없어 이 기기에만 남긴다 */
+  if(!opts.local && !(fareRowNo(k) && !isSheetFare(k))){
     S.pending[k] = { v:v, ts:Date.now() };
     sync.scheduleFlush();
   }
@@ -593,6 +628,131 @@ function setInput(k, v){
   if(document.activeElement === el) return;
   el.value = v == null ? '' : v;
   paintFormatted();
+}
+
+/* ================= 운임 행 그리기·넣기·지우기 ================= */
+function fareRowHTML(i){
+  var h = '<tr class="r-fare" data-fare-row="' + i + '">';
+  h += '<td class="val"><span class="fc"><span class="fl">일자</span><span class="dwrap">' +
+       '<input class="inp center" type="date" data-k="fare' + i + 'Date" aria-label="운임 ' + i + ' 일자">' +
+       '<span class="dfmt" data-f="fd' + i + '"></span></span></span></td>';
+  ['Mode','From','To','Class'].forEach(function(suf){
+    h += '<td class="val" colspan="2"><span class="fc"><span class="fl">' + FARE_FL[suf] + '</span>' +
+         '<input class="inp center" data-k="fare' + i + suf + '" aria-label="운임 ' + i + ' ' + FARE_FL[suf] + '" placeholder="' + FARE_FL[suf] + '" autocomplete="off"></span></td>';
+  });
+  h += '<td class="val c-amt" colspan="2"><span class="fc"><span class="fl">금액</span>' +
+       '<input class="inp right" data-k="fare' + i + 'Amount" data-type="money" aria-label="운임 ' + i + ' 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></span>' +
+       '<span class="fare-tools no-print">' +
+       '<button class="fbtn add" type="button" data-fare-add="' + i + '" title="운임 ' + i + ' 아래에 한 줄 추가" aria-label="운임 ' + i + ' 아래에 한 줄 추가">＋</button>' +
+       '<button class="fbtn del" type="button" data-fare-del="' + i + '" title="운임 ' + i + ' 줄 삭제" aria-label="운임 ' + i + ' 줄 삭제">－</button>' +
+       '</span></td></tr>';
+  return h;
+}
+
+/* 운임 행을 현재 행 수에 맞춰 다시 그린다(행을 넣거나 지운 뒤, 양식을 불러온 뒤) */
+function renderFareRows(){
+  var head = $('#sheet tr.r-fare-head');
+  if(!head) return;
+  $$('#sheet tr.r-fare').forEach(function(tr){ tr.parentNode.removeChild(tr); });
+  var n = fareCount(), html = '';
+  for(var i = 1; i <= n; i++) html += fareRowHTML(i);
+  head.insertAdjacentHTML('afterend', html);
+  var lab = head.querySelector('td.lbl[rowspan]');
+  if(lab) lab.rowSpan = 1 + n;              /* '운 임' 칸이 머리줄 + 운임 행 전체를 덮게 */
+  var tbl = head.parentNode && head.parentNode.parentNode;
+  if(tbl && tbl.classList) tbl.classList.toggle('fares-more', n > FARE_MIN);
+  $$('#sheet tr.r-fare [data-k]').forEach(bindInput);
+  paintValues();
+}
+
+/* 한 행의 값·입력시각·자동날짜 표시를 다른 행 번호로 옮긴다 */
+function moveFareRow(from, to){
+  FARE_SUF.forEach(function(suf){
+    var a = 'fare' + from + suf, b = 'fare' + to + suf;
+    S.values[b] = (S.values[a] == null) ? '' : S.values[a];
+    if(S.localTs[a]) S.localTs[b] = S.localTs[a]; else delete S.localTs[b];
+    delete S.sent[b];
+    delete S.pending[b];
+  });
+  if(S.manualFareDate[from]) S.manualFareDate[to] = true; else delete S.manualFareDate[to];
+}
+
+/* 시트와 맞춰야 하는 1~4행을 통째로 다시 보낸다(행이 밀리면 칸마다 값이 바뀌므로) */
+function pushFareSlots(){
+  Object.keys(S.pending).forEach(function(k){ if(fareRowNo(k)) delete S.pending[k]; });
+  var now = Date.now();
+  for(var i = 1; i <= FARE_SHEET_ROWS && i <= fareCount(); i++){
+    FARE_SUF.forEach(function(suf){
+      var k = 'fare' + i + suf;
+      var v = String(getVal(k) == null ? '' : getVal(k));
+      S.values[k] = v;
+      S.localTs[k] = now;
+      S.pending[k] = { v:v, ts:now };
+    });
+  }
+  saveLocal();
+  sync.scheduleFlush(300);
+}
+
+function fillFareDate(i, v){
+  var k = 'fare' + i + 'Date';
+  if(i > fareCount()) return;
+  S.values[k] = v || '';
+  S.localTs[k] = Date.now();
+  var el = inputEl(k);
+  if(el && document.activeElement !== el) el.value = v || '';
+  if(isSheetFare(k)) S.pending[k] = { v: v || '', ts: Date.now() };
+}
+
+function fareRowFilled(i){
+  return FARE_SUF.some(function(suf){
+    return String(getVal('fare' + i + suf) == null ? '' : getVal('fare' + i + suf)).trim() !== '';
+  });
+}
+
+/* ＋ : i번 행 바로 아래에 빈 행을 끼워 넣는다(아래 행은 한 칸씩 내려감) */
+function insertFareRow(i){
+  var n = fareCount();
+  if(n >= FARE_MAX){ toast('운임은 최대 ' + FARE_MAX + '행까지 넣을 수 있습니다'); return; }
+  for(var j = n; j >= i + 1; j--) moveFareRow(j, j + 1);
+  var p = i + 1, now = Date.now();
+  FARE_SUF.forEach(function(suf){
+    var k = 'fare' + p + suf;
+    S.values[k] = '';
+    S.localTs[k] = now;
+    delete S.sent[k];
+  });
+  delete S.manualFareDate[p];
+  /* 새 행의 일자는 바로 윗행 날짜(없으면 출장 시작일)로 채운다 */
+  S.values['fare' + p + 'Date'] = getVal('fare' + i + 'Date') || getVal('tripStartDate') || '';
+  S.manualFareDate[p] = true;
+  S.fareRows = n + 1;
+  renderFareRows();
+  pushFareSlots();
+  paintFormatted();
+  toast('운임 ' + p + ' 자리에 한 줄을 넣었습니다');
+  var el = inputEl('fare' + p + 'Mode');
+  if(el){ try{ el.focus(); }catch(e){} }
+}
+
+/* － : i번 행을 지우고 아래 행을 위로 당긴다(최소 4행은 유지) */
+function deleteFareRow(i){
+  var n = fareCount();
+  if(fareRowFilled(i) && !confirm('운임 ' + i + ' 내용을 지우고 아래 행을 위로 당깁니다. 계속할까요?')) return;
+  for(var j = i; j < n; j++) moveFareRow(j + 1, j);
+  var now = Date.now();
+  FARE_SUF.forEach(function(suf){
+    var k = 'fare' + n + suf;
+    S.values[k] = '';
+    S.localTs[k] = now;
+    delete S.sent[k];
+  });
+  delete S.manualFareDate[n];
+  S.fareRows = Math.max(FARE_MIN, n - 1);
+  renderFareRows();
+  pushFareSlots();
+  paintFormatted();
+  toast(n > FARE_MIN ? ('운임 ' + i + ' 줄을 지웠습니다') : ('운임 ' + i + ' 내용을 비웠습니다 · 기본 4행은 유지'));
 }
 
 /* 날짜/시각 표시 형식 */
@@ -631,13 +791,13 @@ function paintFormatted(){
     ['d1', d1txt],
     ['d2', d2txt],
     ['ap', fmtKoDate(getVal('applyDate'))],
-    ['fd1', fmtShortDate(getVal('fare1Date'))],
-    ['fd2', fmtShortDate(getVal('fare2Date'))],
-    ['fd3', fmtShortDate(getVal('fare3Date'))],
-    ['fd4', fmtShortDate(getVal('fare4Date'))],
     ['paxn', (getVal('paxTotal') || '0') + '명'],
     ['paxHead', '동 승 자 성 명 (총 ' + filledPax() + '명)']
   ];
+  var fn = fareCount();
+  for(var fi = 1; fi <= fn; fi++){
+    pairs.push(['fd' + fi, fmtShortDate(getVal('fare' + fi + 'Date'))]);
+  }
   pairs.forEach(function(p){
     var el = $('[data-f="' + p[0] + '"]');
     if(!el) return;
@@ -957,27 +1117,14 @@ function onEdit(el, ev){
     S.pending['tripTime'] = { v: composeTrip(), ts: Date.now() };
     if(k === 'tripStartDate' || k === 'tripEndDate'){
       var sd = getVal('tripStartDate'), ed = getVal('tripEndDate') || sd;
-      var tsNow = Date.now();
-      if(!S.manualFare1Date){
-        S.values.fare1Date = sd;
-        S.localTs.fare1Date = tsNow;
-        var f1El = inputEl('fare1Date');
-        if(f1El && document.activeElement !== f1El) f1El.value = sd;
-        S.pending['fare1Date'] = { v: sd, ts: tsNow };
-      }
-      if(!S.manualFare2Date){
-        S.values.fare2Date = ed;
-        S.localTs.fare2Date = tsNow;
-        var f2El = inputEl('fare2Date');
-        if(f2El && document.activeElement !== f2El) f2El.value = ed;
-        S.pending['fare2Date'] = { v: ed, ts: tsNow };
-      }
+      if(!S.manualFareDate[1]) fillFareDate(1, sd);
+      if(!S.manualFareDate[2]) fillFareDate(2, ed);
     }
     sync.scheduleFlush();
     paintFormatted();
   }
-  if(k === 'fare1Date') S.manualFare1Date = true;
-  if(k === 'fare2Date') S.manualFare2Date = true;
+  var fm = /^fare(\d+)Date$/.exec(k);
+  if(fm) S.manualFareDate[+fm[1]] = true;
   if(k === 'name'){
     if(!S.manualApplicant){
       var el2 = inputEl('applicant');
@@ -1013,29 +1160,34 @@ function paintValues(){
   paintFormatted();
 }
 
-function bindForm(){
-  $$('#sheet [data-k]').forEach(function(el){
-    var k = el.dataset.k;
-    var v = getVal(k);
-    if(k === 'paxTotal'){ el.value = S.manualTotal ? v : autoTotal(); }
-    else if(el.type === 'date'){ el.value = v || ''; }
-    else if(el.dataset.type === 'money'){ el.value = comma(v); }
-    else el.value = v;
+function bindInput(el){
+  if(!el || el.dataset.bound === '1') return;
+  el.dataset.bound = '1';
+  var k = el.dataset.k;
+  var v = getVal(k);
+  if(k === 'paxTotal'){ el.value = S.manualTotal ? v : autoTotal(); }
+  else if(el.type === 'date'){ el.value = v || ''; }
+  else if(el.dataset.type === 'money'){ el.value = comma(v); }
+  else el.value = v;
 
-    el.addEventListener('input', function(ev){ onEdit(el, ev); });
-    el.addEventListener('change', function(ev){ onEdit(el, ev); });
-    el.addEventListener('blur', function(){
-      if(el.dataset.type === 'money'){ el.value = comma(getVal(k)); }
-      if(el.dataset.type === 'int'){ el.value = digits(getVal(k)); }
-      saveSoon();
-    });
-    el.addEventListener('focus', function(e){
-      if(el.dataset.type === 'money' || el.dataset.type === 'int'){
-        var d = digits(el.value);
-        if(d) el.value = d;
-      }
-    });
+  el.addEventListener('input', function(ev){ onEdit(el, ev); });
+  el.addEventListener('change', function(ev){ onEdit(el, ev); });
+  el.addEventListener('blur', function(){
+    var kk = el.dataset.k;
+    if(el.dataset.type === 'money'){ el.value = comma(getVal(kk)); }
+    if(el.dataset.type === 'int'){ el.value = digits(getVal(kk)); }
+    saveSoon();
   });
+  el.addEventListener('focus', function(e){
+    if(el.dataset.type === 'money' || el.dataset.type === 'int'){
+      var d = digits(el.value);
+      if(d) el.value = d;
+    }
+  });
+}
+
+function bindForm(){
+  $$('#sheet [data-k]').forEach(bindInput);
   paintValues();
 }
 
@@ -1084,6 +1236,8 @@ function takeSnapshot(){
     ts: Date.now(),
     date: todayStr(),
     values: vals,
+    fareRows: fareCount(),
+    manualFareDate: S.manualFareDate,
     manualTotal: !!S.manualTotal,
     manualApplicant: !!S.manualApplicant
   };
@@ -1120,16 +1274,26 @@ function loadSnapshot(id){
   S.values = {};
   S.pending = {};
   S.sent = {};
+  S.localTs = {};
   S.manualTotal = !!snap.manualTotal;
   S.manualApplicant = !!snap.manualApplicant;
-  $$('#sheet [data-k]').forEach(function(el){
-    var k = el.dataset.k;
+  S.manualFareDate = {};
+  Object.keys(snap.manualFareDate || {}).forEach(function(k){ if(snap.manualFareDate[k]) S.manualFareDate[k] = true; });
+  Object.keys(snap.values || {}).forEach(function(k){
     var v = (snap.values[k] === undefined || snap.values[k] === null) ? defVal(k) : String(snap.values[k]);
     S.values[k] = v;
   });
-  /* 불러온 양식을 시트에도 같이 반영 */
+  var fr = parseInt(snap.fareRows, 10) || 0;
+  S.fareRows = Math.max(FARE_MIN, Math.min(FARE_MAX, Math.max(fr, fareMaxFromValues())));
+  renderFareRows();          /* 행 수를 먼저 맞춰야 5행부터의 값도 화면에 들어간다 */
+  $$('#sheet [data-k]').forEach(function(el){
+    var k = el.dataset.k;
+    if(S.values[k] === undefined) S.values[k] = defVal(k);
+  });
+  /* 불러온 양식을 시트에도 같이 반영(운임 5행부터는 시트에 자리가 없어 이 기기에만) */
   var now = Date.now();
   Object.keys(S.values).forEach(function(k){
+    if(fareRowNo(k) && !isSheetFare(k)) return;
     S.localTs[k] = now;
     S.pending[k] = { v: S.values[k], ts: now };
   });
@@ -1464,6 +1628,7 @@ async function doPdf(){
 /* ================= 시작 ================= */
 function start(){
   sanitize();
+  renderFareRows();      /* 운임 행(기본 4행)을 먼저 그리고 나서 입력칸을 연결한다 */
   bindForm();
   adminOn = false;      /* 새로고침·앱 재실행하면 항상 잠금 상태로 시작 */
   renderSaved();
@@ -1487,6 +1652,17 @@ function start(){
   });
   var pa = $('#paxAuto');
   if(pa) pa.addEventListener('click', function(){ S.manualTotal = false; refreshAutoTotal(); saveSoon(); });
+  /* 운임 행 ＋/－ — 행을 다시 그려도 계속 동작하도록 표 전체에서 한 번만 받는다 */
+  var sh = $('#sheet');
+  if(sh && sh.addEventListener){
+    sh.addEventListener('click', function(e){
+      var t = e.target;
+      var add = t && t.closest ? t.closest('[data-fare-add]') : null;
+      if(add){ insertFareRow(+add.dataset.fareAdd); return; }
+      var del = t && t.closest ? t.closest('[data-fare-del]') : null;
+      if(del){ deleteFareRow(+del.dataset.fareDel); return; }
+    });
+  }
 
   /* 앱 전환·탭 닫기·새로고침·기기 잠금 순간에도 마지막 입력을 놓치지 않는다 */
   function persistNow(){
