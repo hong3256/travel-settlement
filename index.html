@@ -1088,7 +1088,7 @@ function renderSaved(){
   var box = $('#savedList');
   if(!box) return;
   if(!savedList.length){
-    box.innerHTML = '<span class="chips-empty">저장된 양식 없음</span>';
+    box.innerHTML = '';
   }else{
     box.innerHTML = savedList.map(function(s){
       return '<span class="chip">' +
