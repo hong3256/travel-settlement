@@ -113,6 +113,7 @@ table.form tr.r-pax td{height:9.4mm}
 .dwrap{display:inline-flex; align-items:center; gap:2px; vertical-align:middle; max-width:100%}
 .dwrap input.inp{width:auto; min-width:0}
 input[type="date"].inp{min-width:0; width:100%; font-size:8.5pt; padding:0 .5mm}
+input[type="time"].inp{min-width:0; width:auto; font-size:8.5pt; padding:0 .5mm}
 input[type="date"].inp::-webkit-calendar-picker-indicator{opacity:.5; margin:0 0 0 1px; padding:0; width:13px; height:13px}
 table.form tr.r-fare input[type="date"].inp{font-size:8pt}
 .dfmt{display:none}
@@ -197,6 +198,7 @@ table.form tr.r-fare input[type="date"].inp{font-size:8pt}
   .inp::placeholder{color:transparent !important}
   .dfmt{display:inline}
   input[type="date"].inp{display:none}
+  input[type="time"].inp{display:none}
   .pax-auto{display:none}
   .pax-count .inp{display:none}
   .pax-count .unit{display:none}
@@ -212,6 +214,7 @@ body.pdf-mode .inp{padding:0 1mm; min-height:0; background:transparent; outline:
 body.pdf-mode .inp::placeholder{color:transparent}
 body.pdf-mode .dfmt{display:inline}
 body.pdf-mode input[type="date"].inp{display:none}
+body.pdf-mode input[type="time"].inp{display:none}
 body.pdf-mode .pax-auto{display:none}
 body.pdf-mode .pax-count .inp{display:none}
 body.pdf-mode .pax-count .unit{display:none}
@@ -338,10 +341,10 @@ body.pdf-mode .pax-cnt-print{display:inline !important}
           <td class="val" colspan="10">
             <div class="trip-cell">
               <span class="mob-lbl">시작일</span>
-              <span class="dwrap"><input class="inp" type="date" data-k="tripStartDate" aria-label="출장 시작일"><span class="dfmt" data-f="d1"></span></span>
+              <span class="dwrap"><input class="inp" type="date" data-k="tripStartDate" aria-label="출장 시작일"><input class="inp time" type="time" data-k="tripStartTime" aria-label="출장 시작 시간" step="60"><span class="dfmt" data-f="d1"></span></span>
               <span class="tilde" data-f="tilde">~</span>
               <span class="mob-lbl">종료일</span>
-              <span class="dwrap"><input class="inp" type="date" data-k="tripEndDate" aria-label="출장 종료일"><span class="dfmt" data-f="d2"></span></span>
+              <span class="dwrap"><input class="inp" type="date" data-k="tripEndDate" aria-label="출장 종료일"><input class="inp time" type="time" data-k="tripEndTime" aria-label="출장 종료 시간" step="60"><span class="dfmt" data-f="d2"></span></span>
             </div>
           </td>
         </tr>
@@ -450,7 +453,7 @@ body.pdf-mode .pax-cnt-print{display:inline !important}
           <span class="sign-seal">(서명 또는 인)</span>
         </div>
       </div>
-      <p class="orgline"><b>소속기관장</b> 귀하</p>
+      <p class="orgline"><b>만천초등학교장</b> 귀하</p>
 
       <div class="notes">
         <div class="notes-head">유의사항</div>
@@ -491,7 +494,7 @@ var LS_CID   = 'travel-settle:v1:cid';
 
 var MONEY = ['lodgeLimit','lodgeActual','fare1Amount','fare2Amount','fare3Amount','fare4Amount'];
 var DATES = ['tripStartDate','tripEndDate','fare1Date','fare2Date','fare3Date','fare4Date','applyDate'];
-var TRIP  = ['tripStartDate','tripEndDate'];
+var TRIP  = ['tripStartDate','tripEndDate','tripStartTime','tripEndTime'];
 var PAX   = ['pax1Name','pax2Name','pax3Name','pax4Name'];
 
 function $(s, r){ return (r||document).querySelector(s); }
@@ -615,10 +618,16 @@ function fmtTripDate(v){        /* 2026년 11월 23일(월) */
 
 function paintFormatted(){
   var sd = getVal('tripStartDate'), ed = getVal('tripEndDate');
+  var st = getVal('tripStartTime'), et = getVal('tripEndTime');
   var oneDay = !!(sd && ed && sd === ed);
+  /* 인쇄·PDF에는 날짜 옆에 시간을 붙여 한 줄로 보인다. 시간이 없으면 날짜만. */
+  var d1txt = sd ? (fmtTripDate(sd) + (st ? ' ' + st : '')) : '';
+  var d2txt = '';
+  if(ed && !oneDay) d2txt = fmtTripDate(ed) + (et ? ' ' + et : '');
+  else if(et) d2txt = et;                 /* 같은 날: '07:00 ~ 16:40' */
   var pairs = [
-    ['d1', fmtTripDate(sd)],
-    ['d2', oneDay ? '' : fmtTripDate(ed)],
+    ['d1', d1txt],
+    ['d2', d2txt],
     ['ap', fmtKoDate(getVal('applyDate'))],
     ['fd1', fmtShortDate(getVal('fare1Date'))],
     ['fd2', fmtShortDate(getVal('fare2Date'))],
@@ -633,7 +642,7 @@ function paintFormatted(){
     el.textContent = p[1];
   });
   var tilde = $('[data-f="tilde"]');
-  if(tilde) tilde.style.display = (oneDay || !ed) ? 'none' : '';
+  if(tilde) tilde.style.display = d2txt ? '' : 'none';
 }
 
 function digits(s){ return String(s == null ? '' : s).replace(/[^0-9]/g, ''); }
@@ -866,28 +875,40 @@ var sync = {
   }
 };
 
-/* 출장 일시: 앱 → 시트 한 칸(C5)  · 2026-11-30 ~ 2026-12-01 (같은 날이면 하루만) */
+/* 출장 일시: 앱 → 시트 한 칸(C5)
+   2026-11-30 07:00 ~ 2026-12-01 18:00  /  같은 날이면  2026-11-30 07:00 ~ 16:40
+   시간을 안 넣으면 예전처럼 날짜만 쓴다(기존 C5 문자열과도 호환) */
+function pad2t(n){ return (n < 10 ? '0' : '') + n; }
 function composeTrip(){
   var sd = getVal('tripStartDate'), ed = getVal('tripEndDate');
+  var st = getVal('tripStartTime'), et = getVal('tripEndTime');
   if(sd === '__CLEAR__') sd = '';
   if(ed === '__CLEAR__') ed = '';
   if(!sd && !ed) return '';
-  if(sd && ed && sd !== ed) return sd + ' ~ ' + ed;
-  return sd || ed;
+  var same = (!sd || !ed || sd === ed);
+  var head = (sd || ed) + (st ? ' ' + st : '');
+  var tail = '';
+  if(!same) tail = ed + (et ? ' ' + et : '');
+  else if(et) tail = et;
+  return tail ? (head + ' ~ ' + tail) : head;
 }
-/* 시트 → 앱: 위 문자열을 두 날짜 칸으로 되돌린다 */
+/* 시트 → 앱: 위 문자열을 날짜·시간 칸으로 되돌린다 */
 function applyRemoteTrip(text, reqAt){
   var s = String(text == null ? '' : text).trim();
   if(!s) return;
   if(s === composeTrip()) return;
   var parts = s.split('~');
   function parseOne(t){
-    var dm = /(\d{4})\s*[-.\/년]\s*(\d{1,2})\s*[-.\/월]\s*(\d{1,2})/.exec(t || '');
-    if(!dm) return '';
-    return dm[1] + '-' + (dm[2].length < 2 ? '0' + dm[2] : dm[2]) + '-' + (dm[3].length < 2 ? '0' + dm[3] : dm[3]);
+    t = t || '';
+    var dm = /(\d{4})\s*[-.\/년]\s*(\d{1,2})\s*[-.\/월]\s*(\d{1,2})/.exec(t);
+    var tm = /(\d{1,2})\s*:\s*(\d{1,2})/.exec(t);
+    return {
+      d: dm ? (dm[1] + '-' + pad2t(+dm[2]) + '-' + pad2t(+dm[3])) : '',
+      t: tm ? (pad2t(+tm[1]) + ':' + pad2t(+tm[2])) : ''
+    };
   }
-  var a = parseOne(parts[0] || '');
-  var b = parts.length > 1 ? parseOne(parts[1]) : '';
+  var a = parseOne(parts[0]);
+  var b = parts.length > 1 ? parseOne(parts[1]) : null;
   var active = document.activeElement;
   function put(k, v){
     var el = inputEl(k);
@@ -896,9 +917,17 @@ function applyRemoteTrip(text, reqAt){
     if(S.localTs[k] && S.localTs[k] > (reqAt || 0)) return;
     if(getVal(k) !== v) setVal(k, v, { local:true });
   }
-  if(a) put('tripStartDate', a);
-  if(b) put('tripEndDate', b);
-  else if(a) put('tripEndDate', a);
+  if(a.d){
+    put('tripStartDate', a.d);
+    if(a.t) put('tripStartTime', a.t);
+  }
+  if(b){
+    if(b.d) put('tripEndDate', b.d);
+    else if(a.d) put('tripEndDate', a.d);     /* 같은 날: 끝 쪽에 시간만 있음 */
+    if(b.t) put('tripEndTime', b.t);
+  } else if(a.d){
+    put('tripEndDate', a.d);
+  }
   paintFormatted();
 }
 
