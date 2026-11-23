@@ -41,6 +41,38 @@ button{font-family:inherit}
   border:1px solid #ffe082; border-radius:999px; padding:5px 10px; cursor:pointer;
 }
 .badge.ok{color:#1b5e20; background:#e8f5e9; border-color:#a5d6a7}
+/* ---------- 상단 LED 전광판 : 다른 사람이 입력 중 / 입력가능 ---------- */
+.led{max-width:940px; margin:0 auto; padding:0 12px 7px}
+.led-panel{
+  position:relative; overflow:hidden; border-radius:10px; padding:4px 5px 5px;
+  border:2px solid #2a2f36;
+  background:linear-gradient(#080b0f,#121820);
+  box-shadow:0 2px 8px rgba(18,37,58,.20), inset 0 0 16px rgba(0,0,0,.85);
+}
+.led-screen{
+  position:relative; overflow:hidden; height:27px; display:flex; align-items:center;
+  border-radius:6px; background:radial-gradient(ellipse at center, rgba(255,255,255,.05), rgba(0,0,0,.72));
+  box-shadow:inset 0 0 12px rgba(0,0,0,.95);
+}
+.led-track{
+  display:inline-flex; align-items:center; white-space:nowrap; will-change:transform;
+  font-size:15px; font-weight:800; letter-spacing:1.2px; line-height:27px; padding:0 4px;
+}
+.led.busy .led-panel{border-color:#7d1a14; box-shadow:0 2px 10px rgba(255,59,48,.18), inset 0 0 16px rgba(0,0,0,.85)}
+.led.busy .led-track{
+  color:#ff3b30; text-shadow:0 0 4px rgba(255,59,48,.95), 0 0 13px rgba(255,59,48,.60);
+  animation:ledscroll 16s linear infinite;
+}
+.led.idle .led-panel{border-color:#9c7c00; box-shadow:0 2px 10px rgba(255,212,0,.14), inset 0 0 16px rgba(0,0,0,.85)}
+.led.idle .led-screen{justify-content:center}
+.led.idle .led-track{color:#ffd400; text-shadow:0 0 4px rgba(255,212,0,.95), 0 0 13px rgba(255,212,0,.55)}
+@keyframes ledscroll{ from{transform:translateX(100%)} to{transform:translateX(-100%)} }
+.led-sub{
+  display:none; text-align:center; font-size:11.5px; font-weight:800; letter-spacing:1px;
+  color:#ff6b60; text-shadow:0 0 6px rgba(255,59,48,.8); padding:3px 0 0;
+}
+.led.busy .led-sub{display:block}
+@media (prefers-reduced-motion: reduce){ .led.busy .led-track{animation:none !important; transform:none} }
 .ibtn{
   border:1px solid var(--line); background:#f7f9fc; border-radius:10px; padding:6px 8px;
   font-size:15px; line-height:1; cursor:pointer; min-width:36px; min-height:34px;
@@ -327,6 +359,12 @@ body:not(.pdf-mode) tr.r-fare td.c-amt .fbtn{width:36px; height:36px; font-size:
       <button class="ibtn" id="btnSync" type="button" title="동기화 설정" aria-label="동기화 설정">⚙️</button>
     </div>
   </div>
+  <div class="led idle no-print" id="led" role="status" aria-live="polite">
+    <div class="led-panel">
+      <div class="led-screen"><span class="led-track" id="ledTrack"><span>입력가능</span></span></div>
+      <div class="led-sub" id="ledSub"></div>
+    </div>
+  </div>
   <div class="actions no-print">
     <button class="act primary" id="btnPrint" type="button">🖨️ 인쇄 <span class="sm">A4 세로 1장</span></button>
     <button class="act" id="btnPdf" type="button">📄 PDF 저장 <span class="sm">A4 세로 1장</span></button>
@@ -485,7 +523,7 @@ function migrateSyncUrl(u){
   var t = String(u || '').trim();
   return (t && OLD_SYNC_URLS.indexOf(t) >= 0) ? (DEFAULT_SYNC_URL || '') : u;
 }
-var POLL_MS = 5000;
+var POLL_MS = 3000;   /* 입력 중 표시가 빨리 뜨도록 3초 (예전 5초) */
 var RECENT_MS = 10 * 60 * 1000;   // 이 시간 안에 직접 입력한 값은 서버 값보다 우선
 var LS_STATE = 'travel-settle:v1:state';
 var LS_URL   = 'travel-settle:v1:sync';
@@ -892,6 +930,7 @@ var sync = {
         if(!j || !j.ok) throw new Error((j && j.error) || 'ERR');
         self.online = true; self.lastOk = Date.now(); self.fail = 0;
         self.merge(j.values || {}, reqAt);
+        presence.applyServer(j.typing);
       })
       .catch(function(){ self.online = false; })
       .then(function(){
@@ -916,9 +955,15 @@ var sync = {
     var active = document.activeElement;
     var now = Date.now();
     var first = (this.mergeCount === 0);
+    var changed = 0;
     Object.keys(vals).forEach(function(k){
       if(S.pending[k] !== undefined) return;
-      if(k === 'tripTime'){ applyRemoteTrip(vals[k], reqAt); return; }
+      if(k === 'tripTime'){
+        var tripBefore = composeTrip();
+        applyRemoteTrip(vals[k], reqAt);
+        if(composeTrip() !== tripBefore) changed++;
+        return;
+      }
       if(S.localTs[k] && S.localTs[k] > (reqAt || 0)) return;
       var el = inputEl(k);
       if(!el || el === active) return;
@@ -927,14 +972,17 @@ var sync = {
         var n = parseInt(digits(v), 10);
         if(!(n >= 1)) return;                 // 0·빈값은 무시(동승자 명단으로 자동 계산 유지)
         if(filledPax() > 0 && !S.manualTotal){ refreshAutoTotal(); return; }  // 이 기기 명단이 우선
-        if(String(n) !== autoTotal()){ S.manualTotal = true; S.values[k] = String(n); setInput(k, String(n)); }
+        if(String(n) !== autoTotal()){ S.manualTotal = true; S.values[k] = String(n); setInput(k, String(n)); changed++; }
         return;
       }
       if(v === '' || v === getVal(k)) return; // ③ 서버의 빈 값은 화면을 비우지 않는다
       if(first && S.localTs[k] && (now - S.localTs[k]) < RECENT_MS) return;  // ④
       setVal(k, v, { local:true });
+      changed++;
     });
     this.mergeCount = (this.mergeCount || 0) + 1;
+    /* 구버전 Apps Script(typing 없음) 대비 — 남의 기기에서 시트 값이 바뀌었으면 입력 중으로 본다 */
+    if(changed && !first && (now - (this.lastSentAt || 0) > 2500)) presence.infer();
     refreshAutoTotal();
     paintFormatted();
     saveLocal();
@@ -968,6 +1016,7 @@ var sync = {
     if(!updates.length){ if(!unloading) this.flushing = false; return; }
 
     var body = JSON.stringify({ action:'batchUpdate', clientId:CLIENT_ID, updates:updates });
+    this.lastSentAt = Date.now();   /* 내가 보낸 값이 서버에 반영된 것을 '남의 입력'으로 오해하지 않게 */
 
     /* 페이지를 닫거나 앱을 전환하는 순간: 응답을 기다릴 수 없으므로
        sendBeacon(또는 keepalive fetch)으로 즉시 내보낸다.
@@ -1036,6 +1085,107 @@ var sync = {
     this.online = false;
     this.render();
     if(this.url){ this.pollNow(); this.scheduleFlush(400); }
+  }
+};
+
+/* ================= 「다른 사람이 입력 중」 전광판 =================
+   · 내가 입력칸을 건드리면 2.5초에 한 번 'typing' 신호만 서버로 보낸다(값·시트 셀은 안 건드림).
+   · 6초 동안 입력이 없거나 칸에서 빠져나가면 'typing:false'를 보낸다.
+   · 남의 신호는 state 응답의 typing{clientId, who, ageMs}로 받고, 9초가 지나면 저절로 꺼진다.
+   · 구버전 Apps Script(typing 없음)일 때는 시트 값이 방금 바뀐 것을 보고 8초간 '입력 중'으로 추정한다.
+*/
+var TYPING_TTL_MS   = 9000;    /* 서버 쪽 유효 시간과 같게 */
+var TYPING_SEND_MS  = 2500;    /* 입력 중 신호 간격 */
+var TYPING_IDLE_MS  = 6000;    /* 이만큼 입력이 없으면 스스로 해제 */
+var TYPING_INFER_MS = 8000;    /* 구버전 서버 대비 추정 시간 */
+
+var presence = {
+  who:'', cidExp:0, inferUntil:0, lastSent:0, sending:false, idleTimer:null, key:'',
+  init:function(){
+    this.render();
+    var self = this;
+    setInterval(function(){ self.render(); }, 1000);
+  },
+  onInput:function(){
+    var self = this;
+    clearTimeout(this.idleTimer);
+    this.idleTimer = setTimeout(function(){ self.stop(); }, TYPING_IDLE_MS);
+    if(!sync.url) return;
+    if(Date.now() - this.lastSent < TYPING_SEND_MS) return;
+    this.send(true);
+  },
+  blurred:function(){
+    var self = this;
+    clearTimeout(this.idleTimer);
+    this.idleTimer = setTimeout(function(){
+      var a = document.activeElement;
+      if(a && a.dataset && a.dataset.k) return;   /* 다음 칸으로 옮겨 간 것뿐이면 계속 입력 중 */
+      self.stop();
+    }, 500);
+  },
+  stop:function(beacon){
+    clearTimeout(this.idleTimer);
+    if(!sync.url) return;
+    this.send(false, beacon);
+  },
+  send:function(on, beacon){
+    if(!sync.url) return;
+    var body = JSON.stringify({
+      action:'typing', clientId:CLIENT_ID, who:getVal('name'), typing: !!on
+    });
+    if(beacon){
+      try{
+        if(navigator.sendBeacon && navigator.sendBeacon(sync.url, new Blob([body], { type:'text/plain;charset=utf-8' }))) return;
+      }catch(e){}
+    }
+    if(this.sending) return;         /* 응답이 느릴 때 신호가 쌓이지 않게 */
+    var self = this;
+    this.sending = true;
+    this.lastSent = Date.now();
+    fetch(sync.url, {
+      method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      body: body, cache:'no-store', keepalive: true
+    }).catch(function(){}).then(function(){ self.sending = false; });
+  },
+  applyServer:function(t){
+    var now = Date.now();
+    if(!t || !t.clientId || t.clientId === CLIENT_ID){ this.cidExp = 0; return; }
+    var age = Math.max(0, Number(t.ageMs) || 0);
+    this.who = String(t.who == null ? '' : t.who);
+    this.cidExp = now + Math.max(1200, TYPING_TTL_MS - age);
+  },
+  infer:function(){ this.inferUntil = Date.now() + TYPING_INFER_MS; },
+  state:function(){
+    var now = Date.now();
+    if(this.cidExp > now) return { busy:true, who:this.who };
+    if(this.inferUntil > now) return { busy:true, who:'' };
+    return { busy:false, who:'' };
+  },
+  render:function(){
+    var led = $('#led');
+    if(!led) return;
+    var st = this.state();
+    var key = st.busy ? ('b|' + st.who) : 'i';
+    if(this.key === key) return;
+    this.key = key;
+    var track = $('#ledTrack'), sub = $('#ledSub');
+    led.classList.toggle('busy', st.busy);
+    led.classList.toggle('idle', !st.busy);
+    if(st.busy){
+      var txt = '🔴 ' + (st.who ? st.who + '님이' : '다른 사람이') + ' 입력 중입니다';
+      var one = esc(txt), sep = ' &nbsp;·&nbsp; ';
+      track.innerHTML = '<span>' + one + sep + one + sep + one + '</span>';
+      track.style.animation = 'none';
+      void track.offsetWidth;                 /* 흐르는 위치를 처음부터 다시 */
+      track.style.animation = '';
+      track.style.animationDuration = Math.max(11, Math.min(26, Math.round(txt.length * 0.5))) + 's';
+      if(sub) sub.textContent = '입력중이니 기다려주세요';
+    } else {
+      track.textContent = '입력가능';
+      track.style.animation = '';
+      track.style.animationDuration = '';
+      if(sub) sub.textContent = '';
+    }
   }
 };
 
@@ -1172,19 +1322,21 @@ function bindInput(el){
   else if(el.dataset.type === 'money'){ el.value = comma(v); }
   else el.value = v;
 
-  el.addEventListener('input', function(ev){ onEdit(el, ev); });
+  el.addEventListener('input', function(ev){ onEdit(el, ev); presence.onInput(); });
   el.addEventListener('change', function(ev){ onEdit(el, ev); });
   el.addEventListener('blur', function(){
     var kk = el.dataset.k;
     if(el.dataset.type === 'money'){ el.value = comma(getVal(kk)); }
     if(el.dataset.type === 'int'){ el.value = digits(getVal(kk)); }
     saveSoon();
+    presence.blurred();
   });
   el.addEventListener('focus', function(e){
     if(el.dataset.type === 'money' || el.dataset.type === 'int'){
       var d = digits(el.value);
       if(d) el.value = d;
     }
+    presence.onInput();
   });
 }
 
@@ -1635,6 +1787,7 @@ function start(){
   adminOn = false;      /* 새로고침·앱 재실행하면 항상 잠금 상태로 시작 */
   renderSaved();
   sync.init();
+  presence.init();
   $('#badge').addEventListener('click', openSettings);
   $('#btnSync').addEventListener('click', openSettings);
   $('#btnPrint').addEventListener('click', doPrint);
@@ -1669,6 +1822,7 @@ function start(){
   /* 앱 전환·탭 닫기·새로고침·기기 잠금 순간에도 마지막 입력을 놓치지 않는다 */
   function persistNow(){
     saveLocal();
+    presence.stop(true);                  /* 앱을 떠날 땀에는 '입력 중'을 바로 내린다 */
     if(sync.url && Object.keys(S.pending).length) sync.flushNow(true);
   }
   document.addEventListener('visibilitychange', function(){
