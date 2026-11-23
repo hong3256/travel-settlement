@@ -2,7 +2,7 @@
    - 핵심 파일은 stale-while-revalidate: 캐시로 즉시 열고, 뒤에서 새 버전을 받아 다음 실행에 반영
    - 한 번 열어 둔 양식은 오프라인에서도 그대로 열림(입력 내용은 기기에 저장)
 */
-var CACHE = 'travel-settlement-v8';
+var CACHE = 'travel-settlement-v9';
 var CORE = [
   './',
   './index.html',
