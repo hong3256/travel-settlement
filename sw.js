@@ -2,7 +2,7 @@
    - 핵심 파일은 stale-while-revalidate: 캐시로 즉시 열고, 뒤에서 새 버전을 받아 다음 실행에 반영
    - 한 번 열어 둔 양식은 오프라인에서도 그대로 열림(입력 내용은 기기에 저장)
 */
-var CACHE = 'travel-settlement-v7';
+var CACHE = 'travel-settlement-v8';
 var CORE = [
   './',
   './index.html',
@@ -36,7 +36,9 @@ self.addEventListener('activate', function (event) {
 });
 
 function update(req) {
-  return fetch(req).then(function (res) {
+  /* cache:'reload' — 브라우저 HTTP 캐시(max-age=600)에 남은 예전 파일을 쓰지 않고
+     서버에서 새 파일을 받아 캐시에 넣는다. 새 버전이 바로 반영되도록. */
+  return fetch(req, { cache: 'reload' }).then(function (res) {
     if (res && res.ok && res.type === 'basic') {
       var copy = res.clone();
       caches.open(CACHE).then(function (cache) { cache.put(req, copy); });
