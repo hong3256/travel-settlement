@@ -704,9 +704,11 @@ function fillFareDate(i, v){
   if(isSheetFare(k)) S.pending[k] = { v: v || '', ts: Date.now() };
 }
 
+/* 지울 때 확인을 받을지 — 자동으로 채워지는 일자만 있는 행은 빈 행으로 본다 */
 function fareRowFilled(i){
-  return FARE_SUF.some(function(suf){
-    return String(getVal('fare' + i + suf) == null ? '' : getVal('fare' + i + suf)).trim() !== '';
+  return ['Mode','From','To','Class','Amount'].some(function(suf){
+    var v = getVal('fare' + i + suf);
+    return String(v == null ? '' : v).trim() !== '';
   });
 }
 
