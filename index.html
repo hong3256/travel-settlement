@@ -89,18 +89,18 @@ table.form td{
   border:1.1pt solid #000; padding:1mm 1.4mm; font-size:10pt; line-height:1.28;
   vertical-align:middle; word-break:keep-all; overflow-wrap:anywhere;
 }
-table.form tr.gap td{border:0; padding:0; height:3.6mm}
+table.form tr.gap td{border:0; padding:0; height:2.8mm}
 table.form td.lbl{text-align:center; font-weight:500; white-space:pre-line}
 table.form td.lbl.left{text-align:left; padding-left:2mm}
 table.form td.small{font-size:9pt; line-height:1.22}
 table.form td.val{padding:0 1mm}
-table.form tr.r-id td{height:12mm}
-table.form tr.r-trip td{height:9.4mm}
-table.form tr.r-lodge td{height:13mm}
-table.form tr.r-fare-head td{height:8mm}
-table.form tr.r-fare td{height:9mm}
-table.form tr.r-pax-head td{height:8.4mm}
-table.form tr.r-pax td{height:9mm}
+table.form tr.r-id td{height:10.6mm}
+table.form tr.r-trip td{height:9.8mm}
+table.form tr.r-lodge td{height:19mm}
+table.form tr.r-fare-head td{height:8.8mm}
+table.form tr.r-fare td{height:9.8mm}
+table.form tr.r-pax-head td{height:9mm}
+table.form tr.r-pax td{height:9.4mm}
 /* 입력칸 */
 .inp{
   width:100%; border:0; background:transparent; font:inherit; color:#000;
@@ -111,16 +111,17 @@ table.form tr.r-pax td{height:9mm}
 .inp.center{text-align:center}
 .inp.right{text-align:right}
 .dwrap{display:inline-flex; align-items:center; gap:2px; vertical-align:middle; max-width:100%}
-.dwrap input.inp{width:auto}
-input[type="date"].inp{min-width:120px}
+.dwrap input.inp{width:auto; min-width:0}
+input[type="date"].inp{min-width:0; width:100%; font-size:9pt; padding:0 1mm}
+input[type="date"].inp::-webkit-calendar-picker-indicator{opacity:.55; margin-left:0; padding:0}
 .dfmt{display:none}
 .tilde{padding:0 2mm; color:#000}
 .trip-cell{display:flex; align-items:center; flex-wrap:wrap; gap:1mm 2mm}
 .mob-lbl{display:none}
 /* 동승자 */
-.pax-count{display:inline-flex; align-items:baseline; justify-content:center; gap:2px; width:100%}
-.pax-count .inp{width:2.4em; text-align:center; padding:0}
-.pax-count .unit{font-size:10pt}
+.pax-count{display:flex; align-items:center; justify-content:center; gap:1.5mm; width:100%; flex-wrap:wrap}
+.pax-count .inp{width:2.2em; flex:0 0 auto; text-align:center; padding:0}
+.pax-count .unit{font-size:10pt; flex:0 0 auto}
 .pax-auto{
   font-size:7.5pt; color:#1f4e79; background:#eaf1f9; border:1px solid #d3e1f1;
   border-radius:4px; padding:0 3px; line-height:1.5; cursor:pointer; white-space:nowrap;
@@ -228,7 +229,7 @@ body.pdf-mode .pax-cnt-print{display:inline !important}
   .doc-mark{font-size:9pt}
   .doc-note{font-size:8.5pt}
   table.form td{font-size:9pt; padding:.8mm 1mm}
-  input[type="date"].inp{min-width:98px}
+  input[type="date"].inp{min-width:0; font-size:11px}
   .inp{min-height:28px}
   .apply-text{font-size:9.5pt}
   .notes ol{font-size:8.5pt}
@@ -305,9 +306,11 @@ body.pdf-mode .pax-cnt-print{display:inline !important}
 
     <table class="form">
       <colgroup>
-        <col style="width:10%"><col style="width:10%"><col style="width:8%"><col style="width:8%">
-        <col style="width:10%"><col style="width:9%"><col style="width:9%"><col style="width:9%">
-        <col style="width:7%"><col style="width:7%"><col style="width:13%">
+        <col style="width:14.2%">
+        <col style="width:14.3%">
+        <col style="width:7.15%"><col style="width:7.15%"><col style="width:7.15%"><col style="width:7.15%">
+        <col style="width:7.15%"><col style="width:7.15%"><col style="width:7.15%"><col style="width:7.15%">
+        <col style="width:7.15%"><col style="width:7.15%">
       </colgroup>
       <tbody>
         <!-- 인적사항 -->
@@ -317,15 +320,15 @@ body.pdf-mode .pax-cnt-print{display:inline !important}
           <td class="lbl" colspan="2">직 급<br>(직위)</td>
           <td class="val" colspan="2"><input class="inp center" data-k="rank" aria-label="직급(직위)" placeholder="직급(직위)" autocomplete="off"></td>
           <td class="lbl" colspan="2">성 명</td>
-          <td class="val" colspan="2"><input class="inp center" data-k="name" aria-label="성명" placeholder="성명" autocomplete="name"></td>
+          <td class="val" colspan="3"><input class="inp center" data-k="name" aria-label="성명" placeholder="성명" autocomplete="name"></td>
         </tr>
-        <tr class="gap"><td colspan="11"></td></tr>
+        <tr class="gap"><td colspan="12"></td></tr>
 
         <!-- 출장(부임) 일정 -->
         <tr class="r-trip">
           <td class="lbl" rowspan="2">출 장<br>(부임)<br>일 정</td>
           <td class="lbl">일  시</td>
-          <td class="val" colspan="9">
+          <td class="val" colspan="10">
             <div class="trip-cell">
               <span class="mob-lbl">시작일</span>
               <span class="dwrap"><input class="inp" type="date" data-k="tripStartDate" aria-label="출장 시작일"><span class="dfmt" data-f="d1"></span></span>
@@ -337,9 +340,9 @@ body.pdf-mode .pax-cnt-print{display:inline !important}
         </tr>
         <tr class="r-trip">
           <td class="lbl">출장(부임)지</td>
-          <td class="val" colspan="9"><input class="inp" data-k="destination" aria-label="출장(부임)지" placeholder="출장(부임)지" autocomplete="off"></td>
+          <td class="val" colspan="10"><input class="inp" data-k="destination" aria-label="출장(부임)지" placeholder="출장(부임)지" autocomplete="off"></td>
         </tr>
-        <tr class="gap"><td colspan="11"></td></tr>
+        <tr class="gap"><td colspan="12"></td></tr>
 
         <!-- 숙박비 -->
         <tr class="r-lodge">
@@ -349,9 +352,9 @@ body.pdf-mode .pax-cnt-print{display:inline !important}
           <td class="lbl small" colspan="2">실제 소요액</td>
           <td class="val" colspan="2"><input class="inp right" data-k="lodgeActual" data-type="money" aria-label="숙박비 실제 소요액" inputmode="numeric" placeholder="금액" autocomplete="off"></td>
           <td class="lbl small" colspan="2">초과지출 사유</td>
-          <td class="val"><input class="inp" data-k="lodgeReason" aria-label="숙박비 초과지출 사유" placeholder="사유" autocomplete="off"></td>
+          <td class="val" colspan="2"><input class="inp" data-k="lodgeReason" aria-label="숙박비 초과지출 사유" placeholder="사유" autocomplete="off"></td>
         </tr>
-        <tr class="gap"><td colspan="11"></td></tr>
+        <tr class="gap"><td colspan="12"></td></tr>
 
         <!-- 운임 -->
         <tr class="r-fare-head">
@@ -361,7 +364,7 @@ body.pdf-mode .pax-cnt-print{display:inline !important}
           <td class="lbl" colspan="2">출발지</td>
           <td class="lbl" colspan="2">도착지</td>
           <td class="lbl" colspan="2">등  급</td>
-          <td class="lbl">금  액</td>
+          <td class="lbl" colspan="2">금  액</td>
         </tr>
         <tr class="r-fare">
           <td class="val"><span class="dwrap"><input class="inp center" type="date" data-k="fare1Date" aria-label="운임 1 일자"><span class="dfmt" data-f="fd1"></span></span></td>
@@ -369,7 +372,7 @@ body.pdf-mode .pax-cnt-print{display:inline !important}
           <td class="val" colspan="2"><input class="inp center" data-k="fare1From" aria-label="운임 1 출발지" placeholder="출발지" autocomplete="off"></td>
           <td class="val" colspan="2"><input class="inp center" data-k="fare1To" aria-label="운임 1 도착지" placeholder="도착지" autocomplete="off"></td>
           <td class="val" colspan="2"><input class="inp center" data-k="fare1Class" aria-label="운임 1 등급" placeholder="등급" autocomplete="off"></td>
-          <td class="val"><input class="inp right" data-k="fare1Amount" data-type="money" aria-label="운임 1 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></td>
+          <td class="val" colspan="2"><input class="inp right" data-k="fare1Amount" data-type="money" aria-label="운임 1 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></td>
         </tr>
         <tr class="r-fare">
           <td class="val"><span class="dwrap"><input class="inp center" type="date" data-k="fare2Date" aria-label="운임 2 일자"><span class="dfmt" data-f="fd2"></span></span></td>
@@ -377,7 +380,7 @@ body.pdf-mode .pax-cnt-print{display:inline !important}
           <td class="val" colspan="2"><input class="inp center" data-k="fare2From" aria-label="운임 2 출발지" placeholder="출발지" autocomplete="off"></td>
           <td class="val" colspan="2"><input class="inp center" data-k="fare2To" aria-label="운임 2 도착지" placeholder="도착지" autocomplete="off"></td>
           <td class="val" colspan="2"><input class="inp center" data-k="fare2Class" aria-label="운임 2 등급" placeholder="등급" autocomplete="off"></td>
-          <td class="val"><input class="inp right" data-k="fare2Amount" data-type="money" aria-label="운임 2 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></td>
+          <td class="val" colspan="2"><input class="inp right" data-k="fare2Amount" data-type="money" aria-label="운임 2 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></td>
         </tr>
         <tr class="r-fare">
           <td class="val"><span class="dwrap"><input class="inp center" type="date" data-k="fare3Date" aria-label="운임 3 일자"><span class="dfmt" data-f="fd3"></span></span></td>
@@ -385,7 +388,7 @@ body.pdf-mode .pax-cnt-print{display:inline !important}
           <td class="val" colspan="2"><input class="inp center" data-k="fare3From" aria-label="운임 3 출발지" placeholder="출발지" autocomplete="off"></td>
           <td class="val" colspan="2"><input class="inp center" data-k="fare3To" aria-label="운임 3 도착지" placeholder="도착지" autocomplete="off"></td>
           <td class="val" colspan="2"><input class="inp center" data-k="fare3Class" aria-label="운임 3 등급" placeholder="등급" autocomplete="off"></td>
-          <td class="val"><input class="inp right" data-k="fare3Amount" data-type="money" aria-label="운임 3 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></td>
+          <td class="val" colspan="2"><input class="inp right" data-k="fare3Amount" data-type="money" aria-label="운임 3 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></td>
         </tr>
         <tr class="r-fare">
           <td class="val"><span class="dwrap"><input class="inp center" type="date" data-k="fare4Date" aria-label="운임 4 일자"><span class="dfmt" data-f="fd4"></span></span></td>
@@ -393,9 +396,9 @@ body.pdf-mode .pax-cnt-print{display:inline !important}
           <td class="val" colspan="2"><input class="inp center" data-k="fare4From" aria-label="운임 4 출발지" placeholder="출발지" autocomplete="off"></td>
           <td class="val" colspan="2"><input class="inp center" data-k="fare4To" aria-label="운임 4 도착지" placeholder="도착지" autocomplete="off"></td>
           <td class="val" colspan="2"><input class="inp center" data-k="fare4Class" aria-label="운임 4 등급" placeholder="등급" autocomplete="off"></td>
-          <td class="val"><input class="inp right" data-k="fare4Amount" data-type="money" aria-label="운임 4 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></td>
+          <td class="val" colspan="2"><input class="inp right" data-k="fare4Amount" data-type="money" aria-label="운임 4 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></td>
         </tr>
-        <tr class="gap"><td colspan="11"></td></tr>
+        <tr class="gap"><td colspan="12"></td></tr>
 
         <!-- 동승자 -->
         <tr class="r-pax-head">
@@ -409,10 +412,10 @@ body.pdf-mode .pax-cnt-print{display:inline !important}
               <button class="pax-auto" id="paxAuto" type="button" title="동승자 명단으로 자동 계산" aria-label="자동 계산">자동</button>
             </span>
           </td>
-          <td class="pax-head" colspan="7" data-f="paxHead">동 승 자 성 명 (총 0명)</td>
+          <td class="pax-head" colspan="8" data-f="paxHead">동 승 자 성 명 (총 0명)</td>
         </tr>
         <tr class="r-pax">
-          <td class="val pax-list-cell" colspan="7">
+          <td class="val pax-list-cell" colspan="8">
             <div class="pax-list">
               <span class="pax-cell"><span class="pax-no">1</span><input class="inp" data-k="pax1Name" aria-label="동승자 1 성명" placeholder="성명" autocomplete="off"></span>
               <span class="pax-cell"><span class="pax-no">2</span><input class="inp" data-k="pax2Name" aria-label="동승자 2 성명" placeholder="성명" autocomplete="off"></span>
@@ -909,6 +912,10 @@ function onEdit(el, ev){
   saveLocal();
 }
 
+function sanitize(){
+  var n = parseInt(digits(getVal('paxTotal')), 10);
+  if(!(n >= 1)){ S.manualTotal = false; S.values.paxTotal = autoTotal(); }
+}
 function paintValues(){
   $$('#sheet [data-k]').forEach(function(el){
     var k = el.dataset.k;
@@ -1375,6 +1382,7 @@ async function doPdf(){
 
 /* ================= 시작 ================= */
 function start(){
+  sanitize();
   bindForm();
   adminOn = false;      /* 새로고침·앱 재실행하면 항상 잠금 상태로 시작 */
   renderSaved();
