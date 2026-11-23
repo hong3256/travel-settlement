@@ -110,10 +110,12 @@ table.form tr.r-pax td{height:9.4mm}
 .inp:focus{outline:1px solid #8fb8e8; background:var(--focus); box-shadow:0 0 0 2px rgba(143,184,232,.22)}
 .inp.center{text-align:center}
 .inp.right{text-align:right}
-.dwrap{display:inline-flex; align-items:center; gap:2px; vertical-align:middle; max-width:100%}
+.dwrap{display:inline-flex; align-items:center; gap:3px; vertical-align:middle; max-width:100%}
 .dwrap input.inp{width:auto; min-width:0}
 input[type="date"].inp{min-width:0; width:100%; font-size:8.5pt; padding:0 .5mm}
-input[type="time"].inp{min-width:0; width:auto; font-size:8.5pt; padding:0 .5mm}
+input[type="time"].inp{min-width:106px; width:auto; font-size:8.5pt; padding:0 .5mm}
+.trip-cell .dwrap input[type="date"].inp{min-width:116px}
+.trip-cell .dwrap input[type="time"].inp{min-width:108px; flex:0 0 auto}
 input[type="date"].inp::-webkit-calendar-picker-indicator{opacity:.5; margin:0 0 0 1px; padding:0; width:13px; height:13px}
 table.form tr.r-fare input[type="date"].inp{font-size:8pt}
 .dfmt{display:none}
