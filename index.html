@@ -955,9 +955,29 @@ function onEdit(el, ev){
 
   if(TRIP.indexOf(k) >= 0){
     S.pending['tripTime'] = { v: composeTrip(), ts: Date.now() };
+    if(k === 'tripStartDate' || k === 'tripEndDate'){
+      var sd = getVal('tripStartDate'), ed = getVal('tripEndDate') || sd;
+      var tsNow = Date.now();
+      if(!S.manualFare1Date){
+        S.values.fare1Date = sd;
+        S.localTs.fare1Date = tsNow;
+        var f1El = inputEl('fare1Date');
+        if(f1El && document.activeElement !== f1El) f1El.value = sd;
+        S.pending['fare1Date'] = { v: sd, ts: tsNow };
+      }
+      if(!S.manualFare2Date){
+        S.values.fare2Date = ed;
+        S.localTs.fare2Date = tsNow;
+        var f2El = inputEl('fare2Date');
+        if(f2El && document.activeElement !== f2El) f2El.value = ed;
+        S.pending['fare2Date'] = { v: ed, ts: tsNow };
+      }
+    }
     sync.scheduleFlush();
     paintFormatted();
   }
+  if(k === 'fare1Date') S.manualFare1Date = true;
+  if(k === 'fare2Date') S.manualFare2Date = true;
   if(k === 'name'){
     if(!S.manualApplicant){
       var el2 = inputEl('applicant');
