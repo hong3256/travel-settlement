@@ -359,7 +359,7 @@ body:not(.pdf-mode) tr.r-fare td.c-amt .fbtn{width:36px; height:36px; font-size:
       <button class="ibtn" id="btnSync" type="button" title="동기화 설정" aria-label="동기화 설정">⚙️</button>
     </div>
   </div>
-  <div class="led idle no-print" id="led" role="status" aria-live="polite">
+  <div class="led idle no-print" id="led" role="status" aria-live="polite" aria-label="입력가능">
     <div class="led-panel">
       <div class="led-screen"><span class="led-track" id="ledTrack"><span>입력가능</span></span></div>
       <div class="led-sub" id="ledSub"></div>
@@ -1175,7 +1175,8 @@ var presence = {
     if(st.busy){
       var txt = '🔴 ' + (st.who ? st.who + '님이' : '다른 사람이') + ' 입력 중입니다';
       var one = esc(txt), sep = ' &nbsp;·&nbsp; ';
-      track.innerHTML = '<span>' + one + sep + one + sep + one + '</span>';
+      led.setAttribute('aria-label', txt + ' 입력중이니 기다려주세요');
+      track.innerHTML = '<span>' + one + '</span><span aria-hidden="true">' + sep + one + sep + one + '</span>';
       track.style.animation = 'none';
       void track.offsetWidth;                 /* 흐르는 위치를 처음부터 다시 */
       track.style.animation = '';
@@ -1183,6 +1184,7 @@ var presence = {
       if(sub) sub.textContent = '입력중이니 기다려주세요';
     } else {
       track.textContent = '입력가능';
+      led.setAttribute('aria-label', '입력가능');
       track.style.animation = '';
       track.style.animationDuration = '';
       if(sub) sub.textContent = '';
