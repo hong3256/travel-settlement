@@ -1417,7 +1417,9 @@ async function doPdf(){
     await sleep(200);
 
     var sheet = $('#sheet');
-    var canvas = await window.html2canvas(sheet, { scale:2, backgroundColor:'#ffffff', logging:false, useCORS:false });
+    /* 휴대폰에서 눌러도 PDF는 PC 화면 기준 서식으로 그린다.
+       windowWidth를 주지 않으면 좁은 화면용(한 열로 펼친) 스타일이 그대로 찍힌다. */
+    var canvas = await window.html2canvas(sheet, { scale:2, backgroundColor:'#ffffff', logging:false, useCORS:false, windowWidth: 1200 });
     var jsPDF = window.jspdf.jsPDF;
     var pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4', compress:true });
 
