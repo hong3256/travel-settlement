@@ -127,6 +127,8 @@ table.form tr.r-fare input[type="date"].inp{font-size:8pt}
   font-size:7.5pt; color:#1f4e79; background:#eaf1f9; border:1px solid #d3e1f1;
   border-radius:4px; padding:0 3px; line-height:1.5; cursor:pointer; white-space:nowrap;
 }
+.fc{display:block}
+.fl{display:none}
 .pax-head{text-align:center; font-size:9.5pt; font-weight:600}
 .pax-list{display:flex; align-items:center; gap:0; width:100%}
 .pax-cell{display:flex; align-items:center; flex:1 1 0; min-width:0; gap:1mm}
@@ -248,6 +250,7 @@ body.pdf-mode .pax-cnt-print{display:inline !important}
   table.form td.lbl.left{padding-left:0}
   table.form td.small{font-size:11px}
   table.form td.val{padding:0 0 2px}
+  .fl{display:block; font-size:10.5px; color:#5b6b7c; margin:3px 0 1px}
   table.form tr.r-fare-head td.lbl:not([rowspan]),
   table.form tr.r-pax-head td.lbl:not([rowspan]),
   table.form tr.r-pax-head td.pax-head{display:none}
@@ -371,36 +374,36 @@ body.pdf-mode .pax-cnt-print{display:inline !important}
           <td class="lbl" colspan="2">금  액</td>
         </tr>
         <tr class="r-fare">
-          <td class="val"><span class="dwrap"><input class="inp center" type="date" data-k="fare1Date" aria-label="운임 1 일자"><span class="dfmt" data-f="fd1"></span></span></td>
-          <td class="val" colspan="2"><input class="inp center" data-k="fare1Mode" aria-label="운임 1 교통편" placeholder="교통편" autocomplete="off"></td>
-          <td class="val" colspan="2"><input class="inp center" data-k="fare1From" aria-label="운임 1 출발지" placeholder="출발지" autocomplete="off"></td>
-          <td class="val" colspan="2"><input class="inp center" data-k="fare1To" aria-label="운임 1 도착지" placeholder="도착지" autocomplete="off"></td>
-          <td class="val" colspan="2"><input class="inp center" data-k="fare1Class" aria-label="운임 1 등급" placeholder="등급" autocomplete="off"></td>
-          <td class="val" colspan="2"><input class="inp right" data-k="fare1Amount" data-type="money" aria-label="운임 1 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></td>
+          <td class="val"><span class="fc"><span class="fl">일자</span><span class="dwrap"><input class="inp center" type="date" data-k="fare1Date" aria-label="운임 1 일자"><span class="dfmt" data-f="fd1"></span></span></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">교통편</span><input class="inp center" data-k="fare1Mode" aria-label="운임 1 교통편" placeholder="교통편" autocomplete="off"></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">출발지</span><input class="inp center" data-k="fare1From" aria-label="운임 1 출발지" placeholder="출발지" autocomplete="off"></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">도착지</span><input class="inp center" data-k="fare1To" aria-label="운임 1 도착지" placeholder="도착지" autocomplete="off"></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">등급</span><input class="inp center" data-k="fare1Class" aria-label="운임 1 등급" placeholder="등급" autocomplete="off"></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">금액</span><input class="inp right" data-k="fare1Amount" data-type="money" aria-label="운임 1 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></span></td>
         </tr>
         <tr class="r-fare">
-          <td class="val"><span class="dwrap"><input class="inp center" type="date" data-k="fare2Date" aria-label="운임 2 일자"><span class="dfmt" data-f="fd2"></span></span></td>
-          <td class="val" colspan="2"><input class="inp center" data-k="fare2Mode" aria-label="운임 2 교통편" placeholder="교통편" autocomplete="off"></td>
-          <td class="val" colspan="2"><input class="inp center" data-k="fare2From" aria-label="운임 2 출발지" placeholder="출발지" autocomplete="off"></td>
-          <td class="val" colspan="2"><input class="inp center" data-k="fare2To" aria-label="운임 2 도착지" placeholder="도착지" autocomplete="off"></td>
-          <td class="val" colspan="2"><input class="inp center" data-k="fare2Class" aria-label="운임 2 등급" placeholder="등급" autocomplete="off"></td>
-          <td class="val" colspan="2"><input class="inp right" data-k="fare2Amount" data-type="money" aria-label="운임 2 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></td>
+          <td class="val"><span class="fc"><span class="fl">일자</span><span class="dwrap"><input class="inp center" type="date" data-k="fare2Date" aria-label="운임 2 일자"><span class="dfmt" data-f="fd2"></span></span></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">교통편</span><input class="inp center" data-k="fare2Mode" aria-label="운임 2 교통편" placeholder="교통편" autocomplete="off"></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">출발지</span><input class="inp center" data-k="fare2From" aria-label="운임 2 출발지" placeholder="출발지" autocomplete="off"></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">도착지</span><input class="inp center" data-k="fare2To" aria-label="운임 2 도착지" placeholder="도착지" autocomplete="off"></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">등급</span><input class="inp center" data-k="fare2Class" aria-label="운임 2 등급" placeholder="등급" autocomplete="off"></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">금액</span><input class="inp right" data-k="fare2Amount" data-type="money" aria-label="운임 2 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></span></td>
         </tr>
         <tr class="r-fare">
-          <td class="val"><span class="dwrap"><input class="inp center" type="date" data-k="fare3Date" aria-label="운임 3 일자"><span class="dfmt" data-f="fd3"></span></span></td>
-          <td class="val" colspan="2"><input class="inp center" data-k="fare3Mode" aria-label="운임 3 교통편" placeholder="교통편" autocomplete="off"></td>
-          <td class="val" colspan="2"><input class="inp center" data-k="fare3From" aria-label="운임 3 출발지" placeholder="출발지" autocomplete="off"></td>
-          <td class="val" colspan="2"><input class="inp center" data-k="fare3To" aria-label="운임 3 도착지" placeholder="도착지" autocomplete="off"></td>
-          <td class="val" colspan="2"><input class="inp center" data-k="fare3Class" aria-label="운임 3 등급" placeholder="등급" autocomplete="off"></td>
-          <td class="val" colspan="2"><input class="inp right" data-k="fare3Amount" data-type="money" aria-label="운임 3 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></td>
+          <td class="val"><span class="fc"><span class="fl">일자</span><span class="dwrap"><input class="inp center" type="date" data-k="fare3Date" aria-label="운임 3 일자"><span class="dfmt" data-f="fd3"></span></span></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">교통편</span><input class="inp center" data-k="fare3Mode" aria-label="운임 3 교통편" placeholder="교통편" autocomplete="off"></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">출발지</span><input class="inp center" data-k="fare3From" aria-label="운임 3 출발지" placeholder="출발지" autocomplete="off"></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">도착지</span><input class="inp center" data-k="fare3To" aria-label="운임 3 도착지" placeholder="도착지" autocomplete="off"></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">등급</span><input class="inp center" data-k="fare3Class" aria-label="운임 3 등급" placeholder="등급" autocomplete="off"></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">금액</span><input class="inp right" data-k="fare3Amount" data-type="money" aria-label="운임 3 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></span></td>
         </tr>
         <tr class="r-fare">
-          <td class="val"><span class="dwrap"><input class="inp center" type="date" data-k="fare4Date" aria-label="운임 4 일자"><span class="dfmt" data-f="fd4"></span></span></td>
-          <td class="val" colspan="2"><input class="inp center" data-k="fare4Mode" aria-label="운임 4 교통편" placeholder="교통편" autocomplete="off"></td>
-          <td class="val" colspan="2"><input class="inp center" data-k="fare4From" aria-label="운임 4 출발지" placeholder="출발지" autocomplete="off"></td>
-          <td class="val" colspan="2"><input class="inp center" data-k="fare4To" aria-label="운임 4 도착지" placeholder="도착지" autocomplete="off"></td>
-          <td class="val" colspan="2"><input class="inp center" data-k="fare4Class" aria-label="운임 4 등급" placeholder="등급" autocomplete="off"></td>
-          <td class="val" colspan="2"><input class="inp right" data-k="fare4Amount" data-type="money" aria-label="운임 4 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></td>
+          <td class="val"><span class="fc"><span class="fl">일자</span><span class="dwrap"><input class="inp center" type="date" data-k="fare4Date" aria-label="운임 4 일자"><span class="dfmt" data-f="fd4"></span></span></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">교통편</span><input class="inp center" data-k="fare4Mode" aria-label="운임 4 교통편" placeholder="교통편" autocomplete="off"></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">출발지</span><input class="inp center" data-k="fare4From" aria-label="운임 4 출발지" placeholder="출발지" autocomplete="off"></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">도착지</span><input class="inp center" data-k="fare4To" aria-label="운임 4 도착지" placeholder="도착지" autocomplete="off"></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">등급</span><input class="inp center" data-k="fare4Class" aria-label="운임 4 등급" placeholder="등급" autocomplete="off"></span></td>
+          <td class="val" colspan="2"><span class="fc"><span class="fl">금액</span><input class="inp right" data-k="fare4Amount" data-type="money" aria-label="운임 4 금액" inputmode="numeric" placeholder="금액" autocomplete="off"></span></td>
         </tr>
         <tr class="gap"><td colspan="12"></td></tr>
 
