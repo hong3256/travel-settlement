@@ -224,63 +224,63 @@ body.pdf-mode .pax-cnt-print{display:inline !important}
   .doc-mark{white-space:normal}
 }
 @media (max-width:640px){
-  .bt{font-size:13.5px}
-  .badge{font-size:11px; padding:4px 8px}
-  .act{padding:6px 10px; font-size:12.5px}
-  .act .sm{display:none}
-  .hint{display:none}
-  .sheet{padding:10mm 7mm 9mm}
-  .doc-title{font-size:17pt; letter-spacing:2px}
-  .doc-title span{padding:0 5mm 1.2mm}
-  .doc-mark{font-size:9pt}
-  .doc-note{font-size:8.5pt}
-  table.form td{font-size:9pt; padding:.8mm 1mm}
-  input[type="date"].inp{min-width:0; font-size:11px}
-  .inp{min-height:28px}
-  .apply-text{font-size:9.5pt}
-  .notes ol{font-size:8.5pt}
+body:not(.pdf-mode) .bt{font-size:13.5px}
+body:not(.pdf-mode) .badge{font-size:11px; padding:4px 8px}
+body:not(.pdf-mode) .act{padding:6px 10px; font-size:12.5px}
+body:not(.pdf-mode) .act .sm{display:none}
+body:not(.pdf-mode) .hint{display:none}
+body:not(.pdf-mode) .sheet{padding:10mm 7mm 9mm}
+body:not(.pdf-mode) .doc-title{font-size:17pt; letter-spacing:2px}
+body:not(.pdf-mode) .doc-title span{padding:0 5mm 1.2mm}
+body:not(.pdf-mode) .doc-mark{font-size:9pt}
+body:not(.pdf-mode) .doc-note{font-size:8.5pt}
+body:not(.pdf-mode) table.form td{font-size:9pt; padding:.8mm 1mm}
+body:not(.pdf-mode) input[type="date"].inp{min-width:0; font-size:11px}
+body:not(.pdf-mode) .inp{min-height:28px}
+body:not(.pdf-mode) .apply-text{font-size:9.5pt}
+body:not(.pdf-mode) .notes ol{font-size:8.5pt}
 }
 /* 아주 좁은 화면: 표를 세로로 펼쳐 입력하기 쉽게 */
 @media (max-width:540px){
-  .sheet{padding:14px 10px 16px}
-  table.form{border:0}
-  table.form,table.form tbody,table.form tr,table.form td{display:block; width:auto !important}
-  table.form tr{border:0; padding:0; margin:0}
-  table.form tr.gap{display:none}
-  table.form td{border:0; padding:0; height:auto !important}
-  table.form td:empty{display:none}
-  table.form td.lbl{text-align:left; font-size:11px; font-weight:800; color:#1f4e79; white-space:normal; margin:9px 0 3px}
-  table.form td.lbl.left{padding-left:0}
-  table.form td.small{font-size:11px}
-  table.form td.val{padding:0 0 2px}
-  .fl{display:block; font-size:10.5px; color:#5b6b7c; margin:3px 0 1px}
-  table.form tr.r-fare-head td.lbl:not([rowspan]),
-  table.form tr.r-pax-head td.lbl:not([rowspan]),
-  table.form tr.r-pax-head td.pax-head{display:none}
-  table.form td.pax-head{text-align:left; font-weight:800; color:#1f4e79; margin:9px 0 3px; font-size:11px}
-  .inp{background:#fbfdff; border:1px solid #d5dee8; border-radius:7px; padding:7px 9px; min-height:38px; font-size:14px; width:100%}
-  .inp:focus{outline:2px solid #8fb8e8; background:#fff}
-  .inp::placeholder{color:#9aa7b5}
-  .dwrap{display:flex; width:100%; gap:4px; margin:3px 0}
-  .dwrap input.inp{width:auto; flex:1; min-width:0}
-  .trip-cell{display:grid; grid-template-columns:1fr; gap:4px}
-  .trip-cell .tilde{display:none}
-  .trip-cell .mob-lbl{display:block; font-size:10.5px; color:#5b6b7c; margin:4px 0 1px}
-  table.form{counter-reset:fare}
-  table.form tr.r-fare{counter-increment:fare; border-top:1px solid #dfe6ee; margin-top:6px; padding-top:6px}
-  table.form tr.r-fare::before{content:"운임 " counter(fare); display:block; font-size:11px; font-weight:800; color:#1f4e79; margin:6px 0 3px}
-  .pax-list{display:grid; grid-template-columns:1fr 1fr; gap:4px 8px}
-  .pax-cell + .pax-cell{border-left:0; padding-left:0}
-  .pax-count{justify-content:flex-start}
-  .pax-count .inp{width:4em; flex:0 0 auto}
-  .pax-auto{font-size:12px; padding:4px 8px; margin-left:6px}
-  .pax-cell .pax-no{font-size:11px; width:12px}
-  .att-line{display:block}
-  .att-line .lab{display:block; margin-bottom:3px}
-  .sign-date{text-align:left}
-  .sign-people{justify-content:flex-start; flex-wrap:wrap}
-  .sign-name{width:auto; flex:1 1 120px}
-  .notes ol{padding-left:5mm}
+body:not(.pdf-mode) .sheet{padding:14px 10px 16px}
+body:not(.pdf-mode) table.form{border:0}
+body:not(.pdf-mode) table.form, body:not(.pdf-mode) table.form tbody, body:not(.pdf-mode) table.form tr, body:not(.pdf-mode) table.form td{display:block; width:auto !important}
+body:not(.pdf-mode) table.form tr{border:0; padding:0; margin:0}
+body:not(.pdf-mode) table.form tr.gap{display:none}
+body:not(.pdf-mode) table.form td{border:0; padding:0; height:auto !important}
+body:not(.pdf-mode) table.form td:empty{display:none}
+body:not(.pdf-mode) table.form td.lbl{text-align:left; font-size:11px; font-weight:800; color:#1f4e79; white-space:normal; margin:9px 0 3px}
+body:not(.pdf-mode) table.form td.lbl.left{padding-left:0}
+body:not(.pdf-mode) table.form td.small{font-size:11px}
+body:not(.pdf-mode) table.form td.val{padding:0 0 2px}
+body:not(.pdf-mode) .fl{display:block; font-size:10.5px; color:#5b6b7c; margin:3px 0 1px}
+body:not(.pdf-mode) table.form tr.r-fare-head td.lbl:not([rowspan]),
+body:not(.pdf-mode) table.form tr.r-pax-head td.lbl:not([rowspan]),
+body:not(.pdf-mode) table.form tr.r-pax-head td.pax-head{display:none}
+body:not(.pdf-mode) table.form td.pax-head{text-align:left; font-weight:800; color:#1f4e79; margin:9px 0 3px; font-size:11px}
+body:not(.pdf-mode) .inp{background:#fbfdff; border:1px solid #d5dee8; border-radius:7px; padding:7px 9px; min-height:38px; font-size:14px; width:100%}
+body:not(.pdf-mode) .inp:focus{outline:2px solid #8fb8e8; background:#fff}
+body:not(.pdf-mode) .inp::placeholder{color:#9aa7b5}
+body:not(.pdf-mode) .dwrap{display:flex; width:100%; gap:4px; margin:3px 0}
+body:not(.pdf-mode) .dwrap input.inp{width:auto; flex:1; min-width:0}
+body:not(.pdf-mode) .trip-cell{display:grid; grid-template-columns:1fr; gap:4px}
+body:not(.pdf-mode) .trip-cell .tilde{display:none}
+body:not(.pdf-mode) .trip-cell .mob-lbl{display:block; font-size:10.5px; color:#5b6b7c; margin:4px 0 1px}
+body:not(.pdf-mode) table.form{counter-reset:fare}
+body:not(.pdf-mode) table.form tr.r-fare{counter-increment:fare; border-top:1px solid #dfe6ee; margin-top:6px; padding-top:6px}
+body:not(.pdf-mode) table.form tr.r-fare::before{content:"운임 " counter(fare); display:block; font-size:11px; font-weight:800; color:#1f4e79; margin:6px 0 3px}
+body:not(.pdf-mode) .pax-list{display:grid; grid-template-columns:1fr 1fr; gap:4px 8px}
+body:not(.pdf-mode) .pax-cell + .pax-cell{border-left:0; padding-left:0}
+body:not(.pdf-mode) .pax-count{justify-content:flex-start}
+body:not(.pdf-mode) .pax-count .inp{width:4em; flex:0 0 auto}
+body:not(.pdf-mode) .pax-auto{font-size:12px; padding:4px 8px; margin-left:6px}
+body:not(.pdf-mode) .pax-cell .pax-no{font-size:11px; width:12px}
+body:not(.pdf-mode) .att-line{display:block}
+body:not(.pdf-mode) .att-line .lab{display:block; margin-bottom:3px}
+body:not(.pdf-mode) .sign-date{text-align:left}
+body:not(.pdf-mode) .sign-people{justify-content:flex-start; flex-wrap:wrap}
+body:not(.pdf-mode) .sign-name{width:auto; flex:1 1 120px}
+body:not(.pdf-mode) .notes ol{padding-left:5mm}
 }
 </style>
 </head>
