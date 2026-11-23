@@ -642,7 +642,9 @@ function autoTotal(){ return String(1 + filledPax()); }
 function refreshAutoTotal(){
   if(S.manualTotal) return;
   var v = autoTotal();
-  if(getVal('paxTotal') !== v) setVal('paxTotal', v, { local:true, silent:false });
+  /* 명단으로 계산한 값은 화면과 구글 시트에 함께 반영한다.
+     (local 로만 두면 시트의 예전 값이 5초 뒤 되돌려 놓는다) */
+  if(getVal('paxTotal') !== v) setVal('paxTotal', v, { silent:false });
 }
 function refreshApplicant(){
   if(S.manualApplicant) return;
@@ -729,6 +731,7 @@ var sync = {
       if(k === 'paxTotal'){
         var n = parseInt(digits(v), 10);
         if(!(n >= 1)) return;                 // 0·빈값은 무시(동승자 명단으로 자동 계산 유지)
+        if(filledPax() > 0 && !S.manualTotal){ refreshAutoTotal(); return; }  // 이 기기 명단이 우선
         if(String(n) !== autoTotal()){ S.manualTotal = true; S.values[k] = String(n); setInput(k, String(n)); }
         return;
       }
