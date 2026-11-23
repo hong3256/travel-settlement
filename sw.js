@@ -5,6 +5,7 @@
    - 한 번 열어 둔 양식은 오프라인에서도 그대로 열림(입력 내용은 기기에 저장)
 */
 var CACHE = 'travel-settlement-v14';
+var SHELL = new URL('./index.html', self.location.href).href;
 var CORE = [
   './',
   './index.html',
@@ -74,12 +75,12 @@ self.addEventListener('fetch', function (event) {
         var fresh = await fetch(req, { cache: 'reload' });
         if (fresh && fresh.ok) {
           var copy = fresh.clone();
-          caches.open(CACHE).then(function (cache) { cache.put('./index.html', copy); });
+          caches.open(CACHE).then(function (cache) { cache.put(SHELL, copy); });
           return fresh;
         }
       } catch (e) { }
       var cache = await caches.open(CACHE);
-      var cached = (await cache.match('./index.html', { ignoreSearch: true })) || (await cache.match('./'));
+      var cached = (await cache.match(SHELL, { ignoreSearch: true })) || (await cache.match(new URL('./', self.location.href).href));
       return cached || offlinePage();
     })());
     return;
