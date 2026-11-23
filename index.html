@@ -472,7 +472,17 @@ body.pdf-mode .pax-cnt-print{display:inline !important}
 (function(){
 'use strict';
 
-var DEFAULT_SYNC_URL = 'https://script.google.com/macros/s/AKfycbzzC7TVVo2xS7XNOmCp6syUHnul411pYBkVZ2BCVfE821Bfx9aeJUyUaAFRI0cQfUzsAw/exec';
+var DEFAULT_SYNC_URL = 'https://script.google.com/macros/s/AKfycbyzWN12CMED0kQG2Cu1R0moMIYavrS3xXJFHW9M762JJGt7sqovDrfBGn3IDmMvXA7SeQ/exec';
+/* 예전 배포 주소 — 이 기기에 저장되어 있으면 앱을 열 때 위 DEFAULT_SYNC_URL로 바꾼다.
+   (새 서식용 Apps Script를 다시 배포했으므로 예전 주소는 쓰지 않는다) */
+var OLD_SYNC_URLS = [
+  'https://script.google.com/macros/s/AKfycbzzC7TVVo2xS7XNOmCp6syUHnul411pYBkVZ2BCVfE821Bfx9aeJUyUaAFRI0cQfUzsAw/exec',
+  'https://script.google.com/macros/s/AKfycbzABBYwYF6wtmsyLHlDL0LPl6_Vp1wAmJBy63j-DF-Sk221yZp0G6HKbCI9WXGgyMpkSA/exec'
+];
+function migrateSyncUrl(u){
+  var t = String(u || '').trim();
+  return (t && OLD_SYNC_URLS.indexOf(t) >= 0) ? (DEFAULT_SYNC_URL || '') : u;
+}
 var POLL_MS = 5000;
 var RECENT_MS = 10 * 60 * 1000;   // 이 시간 안에 직접 입력한 값은 서버 값보다 우선
 var LS_STATE = 'travel-settle:v1:state';
@@ -661,9 +671,18 @@ var sync = {
   init:function(){
     var u = '';
     try{ u = localStorage.getItem(LS_URL) || ''; }catch(e){}
+    /* 이 기기에 예전 배포 주소가 남아 있으면 새 주소로 갈아 끼운다 */
+    var mu = migrateSyncUrl(u);
+    if(mu !== u){
+      u = mu;
+      try{ localStorage.setItem(LS_URL, u); }catch(e){}
+    }
     try{
       var qp = new URLSearchParams(location.search).get('sync');
-      if(qp){ u = qp; localStorage.setItem(LS_URL, u); }
+      if(qp){
+        qp = migrateSyncUrl(qp);
+        u = qp; localStorage.setItem(LS_URL, u);
+      }
     }catch(e){}
     if(!u) u = DEFAULT_SYNC_URL || '';
     this.url = (u || '').trim();
