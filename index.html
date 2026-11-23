@@ -59,6 +59,18 @@ button{font-family:inherit}
 .act .sm{font-weight:600; font-size:11.5px; color:var(--muted)}
 .act.primary .sm{color:#cfe0f5}
 .hint{margin-left:auto; font-size:11.5px; color:var(--muted); white-space:nowrap}
+/* 저장된 양식 칩 */
+.chips{display:flex; gap:6px; align-items:center; overflow-x:auto; min-width:0; max-width:100%;
+  flex:1 1 auto; scrollbar-width:none; -webkit-overflow-scrolling:touch}
+.chips::-webkit-scrollbar{display:none}
+.chip{display:inline-flex; align-items:stretch; flex:0 0 auto; border:1px solid #cfd9e5; background:#fff; border-radius:999px; overflow:hidden}
+.chip-main{border:0; background:transparent; padding:6px 11px; font-size:12.5px; font-weight:800; color:#22364b;
+  cursor:pointer; max-width:46vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.chip-main:active{background:#eef4fb}
+.chip-del{border:0; border-left:1px solid #e2e8f0; background:#fff5f5; color:#b3261e;
+  font-size:15px; font-weight:900; padding:0 9px; cursor:pointer; line-height:1.9}
+.chip-del:active{background:#ffe3e3}
+.chips-empty{font-size:11.5px; color:#8b98a6}
 /* ---------- A4 용지 ---------- */
 .wrap{max-width:940px; margin:0 auto; padding:14px 12px 34px}
 .sheet{
@@ -290,7 +302,10 @@ body.pdf-mode .frow,body.pdf-mode .frow.att,body.pdf-mode .frow.gap{height:34px}
   <div class="actions no-print">
     <button class="act primary" id="btnPrint" type="button">🖨️ 인쇄 <span class="sm">A4 세로 1장</span></button>
     <button class="act" id="btnPdf" type="button">📄 PDF 저장 <span class="sm">A4 세로 1장</span></button>
+    <button class="act" id="btnSaveForm" type="button">💾 저장</button>
     <button class="act" id="btnReset" type="button">🔄 양식 초기화</button>
+    <span class="chips" id="savedList"></span>
+    <button class="act" id="btnAdmin" type="button">🔒 관리자</button>
     <span class="hint" id="savedHint"></span>
   </div>
 </div>
@@ -471,6 +486,7 @@ body.pdf-mode .frow,body.pdf-mode .frow.att,body.pdf-mode .frow.gap{height:34px}
 
 var DEFAULT_SYNC_URL = 'https://script.google.com/macros/s/AKfycbzzC7TVVo2xS7XNOmCp6syUHnul411pYBkVZ2BCVfE821Bfx9aeJUyUaAFRI0cQfUzsAw/exec';
 var POLL_MS = 5000;
+var RECENT_MS = 10 * 60 * 1000;   // 이 시간 안에 직접 입력한 값은 서버 값보다 우선
 var LS_STATE = 'travel-settle:v1:state';
 var LS_URL   = 'travel-settle:v1:sync';
 var LS_CID   = 'travel-settle:v1:cid';
@@ -492,8 +508,13 @@ function timeStr(ts){
   return p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
 }
 
-/* ================= 상태 ================= */
-var S = { v:1, values:{}, manualTotal:false, manualApplicant:false, pending:{} };
+/* ================= 상태 =================
+   values    : 화면에 보이는 값(기기에 그대로 저장)
+   pending   : 아직 시트로 못 보낸 입력
+   sent      : 이 기기가 마지막으로 시트에 보낸 값
+   localTs   : 칸마다 마지막으로 직접 입력한 시각
+*/
+var S = { v:2, values:{}, manualTotal:false, manualApplicant:false, pending:{}, sent:{}, localTs:{} };
 
 (function load(){
   try{
@@ -510,20 +531,22 @@ var S = { v:1, values:{}, manualTotal:false, manualApplicant:false, pending:{} }
         if(p && typeof p === 'object' && p.v !== undefined) S.pending[k] = { v:p.v, ts:p.ts||Date.now() };
       });
     }
+    if(o.sent && typeof o.sent === 'object') S.sent = o.sent;
+    if(o.localTs && typeof o.localTs === 'object') S.localTs = o.localTs;
   }catch(e){}
 })();
 
-var saveTimer = null, saveAt = 0;
+var saveAt = 0;
+/* 입력할 때마다 곧바로(디바운스 없이) 기기에 저장한다. 300ms 지연 저장은
+   그 사이에 앱을 닫으면 마지막 글자가 사라지는 원인이었다. */
 function saveLocal(){
   try{ localStorage.setItem(LS_STATE, JSON.stringify(S)); saveAt = Date.now(); paintSaved(); }catch(e){}
 }
-function saveSoon(){
-  if(saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(function(){ saveTimer = null; saveLocal(); }, 300);
-}
+function saveSoon(){ saveLocal(); }
 function paintSaved(){
   var h = $('#savedHint');
   if(!h) return;
+  if(toastTimer) return;          // 저장/불러오기 알림이 떠 있는 동안엔 그대로 둔다
   h.textContent = saveAt ? ('이 기기에 저장됨 · ' + timeStr(saveAt)) : '';
 }
 
@@ -550,12 +573,13 @@ function setVal(k, v, opts){
   v = (v == null) ? '' : String(v);
   if(getVal(k) === v && !opts.force) return;
   S.values[k] = v;
+  if(!opts.local) S.localTs[k] = Date.now();   // 직접 입력한 시각(서버 값보다 우선)
   if(!opts.silent) setInput(k, v);
   if(!opts.local){
     S.pending[k] = { v:v, ts:Date.now() };
     sync.scheduleFlush();
   }
-  saveSoon();
+  saveLocal();
 }
 
 function inputEl(k){ return $('[data-k="' + k + '"]'); }
@@ -649,7 +673,7 @@ function refreshApplicant(){
 
 /* ================= 동기화 ================= */
 var sync = {
-  url:'', online:false, lastOk:0, polling:false, flushing:false, timer:null, ftimer:null, fail:0,
+  url:'', online:false, lastOk:0, polling:false, flushing:false, timer:null, ftimer:null, fail:0, mergeCount:0,
   init:function(){
     var u = '';
     try{ u = localStorage.getItem(LS_URL) || ''; }catch(e){}
@@ -683,14 +707,15 @@ var sync = {
     if(!this.url || this.polling || document.hidden) return;
     var self = this;
     this.polling = true;
-    var u = this.url + (this.url.indexOf('?') >= 0 ? '&' : '?') + 'action=state&_=' + Date.now();
+    var reqAt = Date.now();   // 이 시각 이후에 고친 칸은 이 응답으로 덮어쓰지 않는다
+    var u = this.url + (this.url.indexOf('?') >= 0 ? '&' : '?') + 'action=state&_=' + reqAt;
     fetch(u, { method:'GET', cache:'no-store' })
       .then(function(r){ return r.text(); })
       .then(function(txt){
         var j = JSON.parse(txt);
         if(!j || !j.ok) throw new Error((j && j.error) || 'ERR');
         self.online = true; self.lastOk = Date.now(); self.fail = 0;
-        self.merge(j.values || {});
+        self.merge(j.values || {}, reqAt);
       })
       .catch(function(){ self.online = false; })
       .then(function(){
@@ -705,23 +730,37 @@ var sync = {
     if(!this.url || document.hidden) return;
     this.timer = setTimeout(function(){ self.pollNow(); }, this.online ? POLL_MS : 12000);
   },
-  merge:function(vals){
+  /* 서버 값 합치기 — 이 기기에 저장된 마지막 입력을 지우지 않는 것이 원칙
+     ① 아직 못 보낸 입력(pending)이 있는 칸은 서버 값을 쓰지 않는다.
+     ② 요청을 보낸 뒤에 고친 칸은 그 응답(예전 값)으로 덮어쓰지 않는다.
+     ③ 서버 값이 비어 있어도 이 기기에 값이 있으면 지우지 않는다(초기화 버튼으로만 비움).
+     ④ 앱을 열어 처음 받은 값 중, 10분 안에 직접 입력한 칸은 그대로 둔다.
+  */
+  merge:function(vals, reqAt){
     var active = document.activeElement;
+    var now = Date.now();
+    var first = (this.mergeCount === 0);
     Object.keys(vals).forEach(function(k){
       if(S.pending[k] !== undefined) return;
-      if(k === 'tripTime'){ applyRemoteTrip(vals.tripTime); return; }
+      if(k === 'tripTime'){ applyRemoteTrip(vals[k], reqAt); return; }
+      if(S.localTs[k] && S.localTs[k] > (reqAt || 0)) return;
       var el = inputEl(k);
       if(!el || el === active) return;
       var v = (vals[k] == null) ? '' : String(vals[k]);
       if(k === 'paxTotal'){
-        if(v !== '' && getVal(k) !== v){ S.manualTotal = true; S.values[k] = v; setInput(k, v); }
+        var n = parseInt(digits(v), 10);
+        if(!(n >= 1)) return;                 // 0·빈값은 무시(동승자 명단으로 자동 계산 유지)
+        if(String(n) !== autoTotal()){ S.manualTotal = true; S.values[k] = String(n); setInput(k, String(n)); }
         return;
       }
-      if(getVal(k) !== v) setVal(k, v, { local:true });
+      if(v === '' || v === getVal(k)) return; // ③ 서버의 빈 값은 화면을 비우지 않는다
+      if(first && S.localTs[k] && (now - S.localTs[k]) < RECENT_MS) return;  // ④
+      setVal(k, v, { local:true });
     });
+    this.mergeCount = (this.mergeCount || 0) + 1;
     refreshAutoTotal();
     paintFormatted();
-    saveSoon();
+    saveLocal();
   },
   scheduleFlush:function(ms){
     if(!this.url) return;
@@ -729,14 +768,14 @@ var sync = {
     clearTimeout(this.ftimer);
     this.ftimer = setTimeout(function(){ self.flushNow(); }, ms == null ? 800 : ms);
   },
-  flushNow:function(){
+  flushNow:function(unloading){
     if(!this.url) return;
     var keys = Object.keys(S.pending);
     if(!keys.length) return;
-    if(this.flushing){ this.scheduleFlush(700); return; }
+    if(this.flushing && !unloading){ this.scheduleFlush(700); return; }
 
     var self = this;
-    this.flushing = true;
+    if(!unloading) this.flushing = true;
     var take = keys.slice(0, 80);
     var sent = [], updates = [];
 
@@ -749,12 +788,35 @@ var sync = {
       updates.push({ field:k, value:v });
       sent.push({ k:k, ts:p.ts });
     });
-    if(!updates.length){ this.flushing = false; return; }
+    if(!updates.length){ if(!unloading) this.flushing = false; return; }
+
+    var body = JSON.stringify({ action:'batchUpdate', clientId:CLIENT_ID, updates:updates });
+
+    /* 페이지를 닫거나 앱을 전환하는 순간: 응답을 기다릴 수 없으므로
+       sendBeacon(또는 keepalive fetch)으로 즉시 내보낸다.
+       응답을 받지 못하므로 pending은 지우지 않고, 다음 실행 때 같은 값을 다시 보내 확인한다. */
+    if(unloading){
+      clearTimeout(this.ftimer);   // 곧 예정된 flush와 중복 전송하지 않는다
+      if(navigator.sendBeacon){
+        try{
+          var blob = new Blob([body], { type:'text/plain;charset=utf-8' });
+          if(navigator.sendBeacon(this.url, blob)) return;
+        }catch(e){}
+      }
+      try{
+        fetch(this.url, {
+          method:'POST',
+          headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+          body: body, keepalive: true
+        }).catch(function(){});
+      }catch(e){}
+      return;
+    }
 
     fetch(this.url, {
       method:'POST',
       headers:{ 'Content-Type':'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action:'batchUpdate', clientId:CLIENT_ID, updates:updates })
+      body: body, keepalive: true
     })
       .then(function(r){ return r.text(); })
       .then(function(txt){
@@ -763,7 +825,10 @@ var sync = {
         self.online = true; self.lastOk = Date.now(); self.fail = 0;
         sent.forEach(function(s){
           var p = S.pending[s.k];
-          if(p && p.ts === s.ts) delete S.pending[s.k];
+          if(p && p.ts === s.ts){
+            S.sent[s.k] = p.v;
+            delete S.pending[s.k];
+          }
         });
         saveLocal();
         if(Object.keys(S.pending).length) self.scheduleFlush(400);
@@ -810,7 +875,7 @@ function composeTrip(){
   return b ? (a + ' ~ ' + b) : a;
 }
 /* 시트 → 앱: 위 문자열을 네 칸으로 되돌린다 */
-function applyRemoteTrip(text){
+function applyRemoteTrip(text, reqAt){
   var s = String(text == null ? '' : text).trim();
   if(!s) return;
   if(s === composeTrip()) return;
@@ -832,6 +897,7 @@ function applyRemoteTrip(text){
     var el = inputEl(k);
     if(el && el === active) return;
     if(S.pending[k] !== undefined) return;
+    if(S.localTs[k] && S.localTs[k] > (reqAt || 0)) return;
     if(getVal(k) !== v) setVal(k, v, { local:true });
   }
   if(a.date) put('tripStartDate', a.date);
@@ -872,6 +938,7 @@ function onEdit(el, ev){
     if(!S.manualApplicant){
       var el2 = inputEl('applicant');
       S.values.applicant = el.value;
+      S.localTs.applicant = Date.now();
       if(el2 && document.activeElement !== el2) el2.value = el.value;
       S.pending['applicant'] = { v: el.value, ts: Date.now() };
       sync.scheduleFlush();
@@ -881,7 +948,21 @@ function onEdit(el, ev){
   if(k === 'paxTotal'){ S.manualTotal = true; paintUnit(); }
   if(PAX.indexOf(k) >= 0){ S.manualTotal = false; refreshAutoTotal(); }
   if(DATES.indexOf(k) >= 0 || TIMES.indexOf(k) >= 0){ paintFormatted(); }
-  saveSoon();
+  saveLocal();
+}
+
+function paintValues(){
+  $$('#sheet [data-k]').forEach(function(el){
+    var k = el.dataset.k;
+    var v = getVal(k);
+    if(k === 'paxTotal'){ el.value = S.manualTotal ? v : autoTotal(); }
+    else if(el.type === 'date' || el.type === 'time'){ el.value = v || ''; }
+    else if(el.dataset.type === 'money'){ el.value = comma(v); }
+    else el.value = v;
+  });
+  refreshAutoTotal();
+  paintUnit();
+  paintFormatted();
 }
 
 function bindForm(){
@@ -907,9 +988,167 @@ function bindForm(){
       }
     });
   });
-  refreshAutoTotal();
-  paintUnit();
-  paintFormatted();
+  paintValues();
+}
+
+/* ================= 저장된 양식(스냅샷) / 관리자 ================= */
+var LS_SAVED = 'travel:saved-list:v1';
+var ADMIN_PW = '0629';
+var SAVED_MAX = 12;
+var savedList = [];
+var adminOn = false;
+
+(function loadSaved(){
+  try{
+    var a = JSON.parse(localStorage.getItem(LS_SAVED) || '[]');
+    if(Array.isArray(a)){
+      savedList = a.filter(function(x){ return x && x.id && x.values; });
+    }
+  }catch(e){ savedList = []; }
+})();
+
+function persistSaved(){
+  try{ localStorage.setItem(LS_SAVED, JSON.stringify(savedList)); }catch(e){}
+}
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function todayStr(){
+  var d = new Date();
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+}
+function snapDate(s){
+  var d = (s.values && s.values.applyDate) ? String(s.values.applyDate).trim() : '';
+  return d || s.date || todayStr();
+}
+function snapName(s){
+  var n = (s.values && (s.values.name || s.values.applicant)) ? String(s.values.name || s.values.applicant).trim() : '';
+  return n || '미입력';
+}
+function snapTitle(s){ return snapDate(s) + ' ' + snapName(s); }
+
+function takeSnapshot(){
+  var vals = {};
+  $$('#sheet [data-k]').forEach(function(el){
+    var k = el.dataset.k;
+    vals[k] = getVal(k);
+  });
+  return {
+    id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    ts: Date.now(),
+    date: todayStr(),
+    values: vals,
+    manualTotal: !!S.manualTotal,
+    manualApplicant: !!S.manualApplicant
+  };
+}
+
+function saveFormSnapshot(){
+  var snap = takeSnapshot();
+  savedList.unshift(snap);
+  if(savedList.length > SAVED_MAX) savedList = savedList.slice(0, SAVED_MAX);
+  persistSaved();
+  renderSaved();
+  toast('💾 저장했습니다 · ' + snapTitle(snap));
+}
+
+function loadSnapshot(id){
+  var snap = null;
+  for(var i = 0; i < savedList.length; i++){ if(savedList[i].id === id) snap = savedList[i]; }
+  if(!snap) return;
+  S.values = {};
+  S.pending = {};
+  S.sent = {};
+  S.manualTotal = !!snap.manualTotal;
+  S.manualApplicant = !!snap.manualApplicant;
+  $$('#sheet [data-k]').forEach(function(el){
+    var k = el.dataset.k;
+    var v = (snap.values[k] === undefined || snap.values[k] === null) ? defVal(k) : String(snap.values[k]);
+    S.values[k] = v;
+  });
+  /* 불러온 양식을 시트에도 같이 반영 */
+  var now = Date.now();
+  Object.keys(S.values).forEach(function(k){
+    S.localTs[k] = now;
+    S.pending[k] = { v: S.values[k], ts: now };
+  });
+  S.pending['tripTime'] = { v: composeTrip(), ts: now };
+  saveLocal();
+  paintValues();
+  sync.scheduleFlush(300);
+  toast('불러왔습니다 · ' + snapTitle(snap));
+}
+
+function deleteSnapshot(id){
+  savedList = savedList.filter(function(s){ return s.id !== id; });
+  persistSaved();
+  renderSaved();
+  toast('저장된 양식을 삭제했습니다');
+}
+
+function renderSaved(){
+  var box = $('#savedList');
+  if(!box) return;
+  if(!savedList.length){
+    box.innerHTML = '<span class="chips-empty">저장된 양식 없음</span>';
+  }else{
+    box.innerHTML = savedList.map(function(s){
+      return '<span class="chip">' +
+        '<button type="button" class="chip-main" data-load="' + esc(s.id) + '" title="' + esc(snapTitle(s)) + ' 불러오기">' + esc(snapTitle(s)) + '</button>' +
+        (adminOn ? '<button type="button" class="chip-del" data-del="' + esc(s.id) + '" title="삭제" aria-label="' + esc(snapTitle(s)) + ' 삭제">×</button>' : '') +
+        '</span>';
+    }).join('');
+  }
+  var b = $('#btnAdmin');
+  if(b){
+    b.textContent = adminOn ? '🔓 잠금' : '🔒 관리자';
+    b.title = adminOn ? '관리자 모드를 끝냅니다' : '관리자 모드(저장한 양식 삭제) — 비밀번호 필요';
+  }
+}
+
+var toastTimer = null;
+function toast(msg){
+  var h = $('#savedHint');
+  if(!h) return;
+  h.textContent = msg;
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ toastTimer = null; paintSaved(); }, 3000);
+}
+
+function openAdmin(){
+  if(adminOn){
+    adminOn = false;
+    renderSaved();
+    toast('🔒 관리자 모드를 잠갔습니다');
+    return;
+  }
+  var html =
+    '<h2>🔒 관리자</h2>' +
+    '<p class="muted">저장된 양식을 삭제하려면 관리자 비밀번호를 넣어 주세요.</p>' +
+    '<label class="lbl2" for="adminPw">비밀번호</label>' +
+    '<input id="adminPw" class="wide" type="password" inputmode="numeric" autocomplete="off" placeholder="비밀번호">' +
+    '<div class="msg" id="adminMsg"></div>' +
+    '<div class="rw end">' +
+      '<button class="btn" type="button" data-a="cancel">취소</button>' +
+      '<button class="btn primary" type="button" data-a="ok">확인</button>' +
+    '</div>';
+  showOverlay(html, function(box){
+    var input = $('#adminPw', box), msg = $('#adminMsg', box);
+    function fail(t){ msg.textContent = t; msg.className = 'msg err'; }
+    function submit(){
+      if((input.value || '').trim() !== ADMIN_PW){ fail('비밀번호가 맞지 않습니다.'); return; }
+      adminOn = true;
+      closeOverlay();
+      renderSaved();
+      toast('🔓 관리자 모드 · × 를 눌러 저장한 양식을 삭제할 수 있습니다');
+    }
+    $$('[data-a]', box).forEach(function(b){
+      b.addEventListener('click', function(){
+        if(b.dataset.a === 'ok') submit();
+        else closeOverlay();
+      });
+    });
+    input.addEventListener('keydown', function(e){ if(e.key === 'Enter') submit(); });
+    setTimeout(function(){ try{ input.focus(); }catch(e){} }, 80);
+  });
 }
 
 /* ================= 오버레이 ================= */
@@ -1040,6 +1279,8 @@ function doReset(alsoSheet){
     el.value = (k === 'org') ? keepOrg : '';
   });
   S.values = { org: keepOrg, paxTotal: '1' };
+  S.sent = { org: keepOrg, paxTotal: '1' };
+  S.localTs = {};
   setInput('paxTotal', '1');
   paintFormatted();
   saveLocal();
@@ -1146,21 +1387,42 @@ async function doPdf(){
 /* ================= 시작 ================= */
 function start(){
   bindForm();
+  renderSaved();
   sync.init();
   $('#badge').addEventListener('click', openSettings);
   $('#btnSync').addEventListener('click', openSettings);
   $('#btnPrint').addEventListener('click', doPrint);
   $('#btnPdf').addEventListener('click', doPdf);
   $('#btnReset').addEventListener('click', openReset);
+  var bs = $('#btnSaveForm');
+  if(bs) bs.addEventListener('click', saveFormSnapshot);
+  var ba = $('#btnAdmin');
+  if(ba) ba.addEventListener('click', openAdmin);
+  var sl = $('#savedList');
+  if(sl) sl.addEventListener('click', function(e){
+    var t = e.target;
+    var del = t.closest ? t.closest('[data-del]') : null;
+    if(del){ deleteSnapshot(del.dataset.del); return; }
+    var ld = t.closest ? t.closest('[data-load]') : null;
+    if(ld){ loadSnapshot(ld.dataset.load); return; }
+  });
   var pa = $('#paxAuto');
   if(pa) pa.addEventListener('click', function(){ S.manualTotal = false; refreshAutoTotal(); saveSoon(); });
 
+  /* 앱 전환·탭 닫기·새로고침·기기 잠금 순간에도 마지막 입력을 놓치지 않는다 */
+  function persistNow(){
+    saveLocal();
+    if(sync.url && Object.keys(S.pending).length) sync.flushNow(true);
+  }
   document.addEventListener('visibilitychange', function(){
-    if(!document.hidden && sync.url) sync.pollNow();
+    if(document.hidden){ persistNow(); }
+    else if(sync.url){ sync.pollNow(); }
   });
+  window.addEventListener('pagehide', persistNow);
+  window.addEventListener('beforeunload', persistNow);
+  document.addEventListener('freeze', persistNow);
   window.addEventListener('online', function(){ if(sync.url){ sync.pollNow(); sync.scheduleFlush(400); } });
   window.addEventListener('offline', function(){ sync.online = false; sync.render(); });
-  window.addEventListener('beforeunload', function(){ saveLocal(); });
   if('serviceWorker' in navigator){
     window.addEventListener('load', function(){ navigator.serviceWorker.register('./sw.js').catch(function(){}); });
   }
