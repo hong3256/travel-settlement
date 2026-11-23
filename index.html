@@ -1107,7 +1107,7 @@ function renderSaved(){
   }else{
     box.innerHTML = savedList.map(function(s){
       return '<span class="chip">' +
-        '<button type="button" class="chip-main" data-load="' + esc(s.id) + '" title="' + esc(snapTitle(s)) + ' 불러오기">' + esc(snapTitle(s)) + '</button>' +
+        '<button type="button" class="chip-main" data-load="' + esc(s.id) + '" title="' + esc(snapTitle(s)) + (adminOn ? ' 불러오기' : ' 열람(관리자 비밀번호 필요)') + '">' + esc(snapTitle(s)) + '</button>' +
         (adminOn ? '<button type="button" class="chip-del" data-del="' + esc(s.id) + '" title="삭제" aria-label="' + esc(snapTitle(s)) + ' 삭제">×</button>' : '') +
         '</span>';
     }).join('');
@@ -1115,7 +1115,7 @@ function renderSaved(){
   var b = $('#btnAdmin');
   if(b){
     b.textContent = adminOn ? '🔓 잠금' : '🔒 관리자';
-    b.title = adminOn ? '관리자 모드를 끝냅니다' : '관리자 모드(저장한 양식 삭제) — 비밀번호 필요';
+    b.title = adminOn ? '관리자 모드를 끝냅니다(저장한 양식 다시 잠금)' : '관리자 모드(저장한 양식 열람·삭제) — 비밀번호 필요';
   }
 }
 
@@ -1128,16 +1128,11 @@ function toast(msg){
   toastTimer = setTimeout(function(){ toastTimer = null; paintSaved(); }, 3000);
 }
 
-function openAdmin(){
-  if(adminOn){
-    adminOn = false;
-    renderSaved();
-    toast('🔒 관리자 모드를 잠갔습니다');
-    return;
-  }
+/* 관리자 비밀번호를 받아 관리자 모드를 연다. onOk 가 있으면 통과 직후 그 일을 이어서 한다. */
+function askAdminPw(onOk, desc){
   var html =
     '<h2>🔒 관리자</h2>' +
-    '<p class="muted">저장된 양식을 삭제하려면 관리자 비밀번호를 넣어 주세요.</p>' +
+    '<p class="muted">' + esc(desc || '저장된 양식을 열어 보려면 관리자 비밀번호를 넣어 주세요.') + '</p>' +
     '<label class="lbl2" for="adminPw">비밀번호</label>' +
     '<input id="adminPw" class="wide" type="password" inputmode="numeric" autocomplete="off" placeholder="비밀번호">' +
     '<div class="msg" id="adminMsg"></div>' +
@@ -1149,11 +1144,12 @@ function openAdmin(){
     var input = $('#adminPw', box), msg = $('#adminMsg', box);
     function fail(t){ msg.textContent = t; msg.className = 'msg err'; }
     function submit(){
-      if((input.value || '').trim() !== ADMIN_PW){ fail('비밀번호가 맞지 않습니다.'); return; }
+      if((input.value || '').trim() !== ADMIN_PW){ fail('비밀번호가 맞지 않습니다. 저장된 양식은 관리자만 열어볼 수 있습니다.'); return; }
       adminOn = true;
       closeOverlay();
       renderSaved();
-      toast('🔓 관리자 모드 · × 를 눌러 저장한 양식을 삭제할 수 있습니다');
+      if(onOk) onOk();
+      else toast('🔓 관리자 모드 · 저장한 양식을 열거나 × 로 삭제할 수 있습니다');
     }
     $$('[data-a]', box).forEach(function(b){
       b.addEventListener('click', function(){
@@ -1164,6 +1160,24 @@ function openAdmin(){
     input.addEventListener('keydown', function(e){ if(e.key === 'Enter') submit(); });
     setTimeout(function(){ try{ input.focus(); }catch(e){} }, 80);
   });
+}
+
+/* 저장된 양식 열람은 관리자 전용 — 잠금 상태면 비밀번호를 먼저 받는다 */
+function openSaved(id){
+  if(adminOn){ loadSnapshot(id); return; }
+  askAdminPw(function(){
+    loadSnapshot(id);
+  }, '저장된 양식은 관리자만 열어볼 수 있습니다. 관리자 비밀번호를 넣으면 열립니다.');
+}
+
+function openAdmin(){
+  if(adminOn){
+    adminOn = false;
+    renderSaved();
+    toast('🔒 관리자 모드를 잠갔습니다 · 저장된 양식은 다시 열 수 없습니다');
+    return;
+  }
+  askAdminPw(null, '저장된 양식을 열어 보거나 × 로 삭제하려면 관리자 비밀번호를 넣어 주세요.');
 }
 
 /* ================= 오버레이 ================= */
@@ -1402,6 +1416,7 @@ async function doPdf(){
 /* ================= 시작 ================= */
 function start(){
   bindForm();
+  adminOn = false;      /* 새로고침·앱 재실행하면 항상 잠금 상태로 시작 */
   renderSaved();
   sync.init();
   $('#badge').addEventListener('click', openSettings);
@@ -1419,7 +1434,7 @@ function start(){
     var del = t.closest ? t.closest('[data-del]') : null;
     if(del){ deleteSnapshot(del.dataset.del); return; }
     var ld = t.closest ? t.closest('[data-load]') : null;
-    if(ld){ loadSnapshot(ld.dataset.load); return; }
+    if(ld){ openSaved(ld.dataset.load); return; }
   });
   var pa = $('#paxAuto');
   if(pa) pa.addEventListener('click', function(){ S.manualTotal = false; refreshAutoTotal(); saveSoon(); });
