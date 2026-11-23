@@ -960,10 +960,8 @@ var sync = {
     Object.keys(vals).forEach(function(k){
       if(S.pending[k] !== undefined) return;
       if(k === 'tripTime'){
-        var tripBefore = composeTrip();
         applyRemoteTrip(vals[k], reqAt);
-        if(composeTrip() !== tripBefore) changed++;
-        return;
+        return;                       /* 날짜 칸은 내가 쓴 값이 돌아오는 일이 많아 '입력 중' 추정에서 뺀다 */
       }
       if(S.localTs[k] && S.localTs[k] > (reqAt || 0)) return;
       var el = inputEl(k);
@@ -984,7 +982,7 @@ var sync = {
     this.mergeCount = (this.mergeCount || 0) + 1;
     /* 구버전 Apps Script(typing 없음) 대비 — 남의 기기에서 시트 값이 바뀌었으면 입력 중으로 본다
        (연결 직후 한까번에 여러 칸이 맞춰지는 것은 입력이 아니므로 건너뛰다) */
-    if(changed && changed <= 5 && !first && (now - (this.lastSentAt || 0) > 2500) && (now - (this.connectedAt || 0) > 8000)) presence.infer();
+    if(changed && changed <= 5 && !first && (now - (this.lastSentAt || 0) > 12000) && (now - (this.connectedAt || 0) > 10000)) presence.infer();
     refreshAutoTotal();
     paintFormatted();
     saveLocal();
