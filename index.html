@@ -112,7 +112,7 @@ table.form tr.r-pax td{height:9.4mm}
 .inp.right{text-align:right}
 .dwrap{display:inline-flex; align-items:center; gap:2px; vertical-align:middle; max-width:100%}
 .dwrap input.inp{width:auto; min-width:0}
-input[type="date"].inp{min-width:0; width:100%; font-size:9pt; padding:0 1mm}
+input[type="date"].inp{min-width:0; width:100%; font-size:8.5pt; padding:0 .5mm}
 input[type="date"].inp::-webkit-calendar-picker-indicator{opacity:.55; margin-left:0; padding:0}
 .dfmt{display:none}
 .tilde{padding:0 2mm; color:#000}
@@ -332,7 +332,7 @@ body.pdf-mode .pax-cnt-print{display:inline !important}
             <div class="trip-cell">
               <span class="mob-lbl">시작일</span>
               <span class="dwrap"><input class="inp" type="date" data-k="tripStartDate" aria-label="출장 시작일"><span class="dfmt" data-f="d1"></span></span>
-              <span class="tilde">~</span>
+              <span class="tilde" data-f="tilde">~</span>
               <span class="mob-lbl">종료일</span>
               <span class="dwrap"><input class="inp" type="date" data-k="tripEndDate" aria-label="출장 종료일"><span class="dfmt" data-f="d2"></span></span>
             </div>
@@ -597,9 +597,11 @@ function fmtTripDate(v){        /* 2026년 11월 23일(월) */
 }
 
 function paintFormatted(){
+  var sd = getVal('tripStartDate'), ed = getVal('tripEndDate');
+  var oneDay = !!(sd && ed && sd === ed);
   var pairs = [
-    ['d1', fmtTripDate(getVal('tripStartDate'))],
-    ['d2', fmtTripDate(getVal('tripEndDate'))],
+    ['d1', fmtTripDate(sd)],
+    ['d2', oneDay ? '' : fmtTripDate(ed)],
     ['ap', fmtKoDate(getVal('applyDate'))],
     ['fd1', fmtShortDate(getVal('fare1Date'))],
     ['fd2', fmtShortDate(getVal('fare2Date'))],
@@ -613,6 +615,8 @@ function paintFormatted(){
     if(!el) return;
     el.textContent = p[1];
   });
+  var tilde = $('[data-f="tilde"]');
+  if(tilde) tilde.style.display = (oneDay || !ed) ? 'none' : '';
 }
 
 function digits(s){ return String(s == null ? '' : s).replace(/[^0-9]/g, ''); }
